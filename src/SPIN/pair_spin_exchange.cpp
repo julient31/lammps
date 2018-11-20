@@ -18,7 +18,7 @@
    Please cite the related publication:
    Tranchida, J., Plimpton, S. J., Thibaudeau, P., & Thompson, A. P. (2018).
    Massively parallel symplectic algorithm for coupled magnetic spin dynamics
-   and molecular dynamics. Journal of Computational Physics.
+   and molecular dynamics. Journal of Computational Physics, 372, 406-425.
 ------------------------------------------------------------------------- */
 
 #include <cmath>
@@ -278,33 +278,36 @@ void PairSpinExchange::compute(int eflag, int vflag)
 
       // compute exchange interaction
 
-      if (rsq <= local_cut2) {
-	compute_exchange(i,j,rsq,fmi,spj);
-        if (lattice_flag) {
-	  compute_exchange_mech(i,j,rsq,eij,fi,spi,spj);
-	}
+      if (rsq <= local_cut2){
+        compute_exchange(i, j, rsq, fmi, spj);
+        if (lattice_flag){
+          compute_exchange_mech(i, j, rsq, eij, fi, spi, spj);
+        }
       }
 
-      f[i][0] += fi[0];	
-      f[i][1] += fi[1];	  	
+      f[i][0] += fi[0];
+      f[i][1] += fi[1];
       f[i][2] += fi[2];
-      fm[i][0] += fmi[0];	
-      fm[i][1] += fmi[1];	  	
+      fm[i][0] += fmi[0];
+      fm[i][1] += fmi[1];
       fm[i][2] += fmi[2];
 
-      if (newton_pair || j < nlocal) {
-	f[j][0] -= fi[0];	
-        f[j][1] -= fi[1];	  	
+      if (newton_pair || j < nlocal){
+        f[j][0] -= fi[0];
+        f[j][1] -= fi[1];
         f[j][2] -= fi[2];
       }
 
-      if (eflag) {
-	evdwl -= (spi[0]*fmi[0] + spi[1]*fmi[1] + spi[2]*fmi[2]);
-	evdwl *= hbar;
-      } else evdwl = 0.0;
+      if (eflag){
+        evdwl -= (spi[0] * fmi[0] + spi[1] * fmi[1] + spi[2] * fmi[2]);
+        evdwl *= hbar;
+      }
+      else
+        evdwl = 0.0;
 
-      if (evflag) ev_tally_xyz(i,j,nlocal,newton_pair,
-	  evdwl,ecoul,fi[0],fi[1],fi[2],delx,dely,delz);
+      if (evflag)
+        ev_tally_xyz(i, j, nlocal, newton_pair,
+                     evdwl, ecoul, fi[0], fi[1], fi[2], delx, dely, delz);
     }
   }
 
@@ -395,8 +398,8 @@ void PairSpinExchange::compute_exchange(int i, int j, double rsq, double fmi[3],
    compute the mechanical force due to the exchange interaction between atom i and atom j
 ------------------------------------------------------------------------- */
 
-void PairSpinExchange::compute_exchange_mech(int i, int j, double rsq, double eij[3], 
-    double fi[3],  double spi[3], double spj[3])
+void PairSpinExchange::compute_exchange_mech(int i, int j, double rsq, double eij[3],
+                                             double fi[3], double spi[3], double spj[3])
 {
   int *type = atom->type;
   int itype, jtype;
@@ -405,18 +408,18 @@ void PairSpinExchange::compute_exchange_mech(int i, int j, double rsq, double ei
   jtype = type[j];
 
   Jex = J1_mech[itype][jtype];
-  iJ3 = 1.0/(J3[itype][jtype]*J3[itype][jtype]);
+  iJ3 = 1.0 / (J3[itype][jtype] * J3[itype][jtype]);
 
-  ra = rsq*iJ3;
-  rr = sqrt(rsq)*iJ3;
+  ra = rsq * iJ3;
+  rr = sqrt(rsq) * iJ3;
 
-  Jex_mech = 1.0-ra-J2[itype][jtype]*ra*(2.0-ra);
-  Jex_mech *= 8.0*Jex*rr*exp(-ra);
-  Jex_mech *= (spi[0]*spj[0]+spi[1]*spj[1]+spi[2]*spj[2]);
+  Jex_mech = 1.0 - ra - J2[itype][jtype] * ra * (2.0 - ra);
+  Jex_mech *= 8.0 * Jex * rr * exp(-ra);
+  Jex_mech *= (spi[0] * spj[0] + spi[1] * spj[1] + spi[2] * spj[2]);
 
-  fi[0] -= Jex_mech*eij[0];
-  fi[1] -= Jex_mech*eij[1];
-  fi[2] -= Jex_mech*eij[2];
+  fi[0] -= Jex_mech * eij[0];
+  fi[1] -= Jex_mech * eij[1];
+  fi[2] -= Jex_mech * eij[2];
 }
 
 /* ----------------------------------------------------------------------
@@ -433,15 +436,13 @@ void PairSpinExchange::allocate()
     for (int j = i; j <= n; j++)
       setflag[i][j] = 0;
 
-  memory->create(cut_spin_exchange,n+1,n+1,"pair/spin/exchange:cut_spin_exchange");
-  memory->create(J1_mag,n+1,n+1,"pair/spin/exchange:J1_mag");
-  memory->create(J1_mech,n+1,n+1,"pair/spin/exchange:J1_mech");
-  memory->create(J2,n+1,n+1,"pair/spin/exchange:J2");
-  memory->create(J3,n+1,n+1,"pair/spin/exchange:J3");
-  memory->create(cutsq,n+1,n+1,"pair:cutsq");
+  memory->create(cut_spin_exchange, n + 1, n + 1, "pair/spin/exchange:cut_spin_exchange");
+  memory->create(J1_mag, n + 1, n + 1, "pair/spin/exchange:J1_mag");
+  memory->create(J1_mech, n + 1, n + 1, "pair/spin/exchange:J1_mech");
+  memory->create(J2, n + 1, n + 1, "pair/spin/exchange:J2");
+  memory->create(J3, n + 1, n + 1, "pair/spin/exchange:J3");
+  memory->create(cutsq, n + 1, n + 1, "pair:cutsq");
 }
-
-
 
 /* ----------------------------------------------------------------------
    proc 0 writes to restart file
@@ -456,11 +457,11 @@ void PairSpinExchange::write_restart(FILE *fp)
     for (j = i; j <= atom->ntypes; j++) {
       fwrite(&setflag[i][j],sizeof(int),1,fp);
       if (setflag[i][j]) {
-        fwrite(&J1_mag[i][j],sizeof(double),1,fp);
-        fwrite(&J1_mech[i][j],sizeof(double),1,fp);
-        fwrite(&J2[i][j],sizeof(double),1,fp);
-        fwrite(&J3[i][j],sizeof(double),1,fp);
-        fwrite(&cut_spin_exchange[i][j],sizeof(double),1,fp);
+        fwrite(&J1_mag[i][j], sizeof(double), 1, fp);
+        fwrite(&J1_mech[i][j], sizeof(double), 1, fp);
+        fwrite(&J2[i][j], sizeof(double), 1, fp);
+        fwrite(&J3[i][j], sizeof(double), 1, fp);
+        fwrite(&cut_spin_exchange[i][j], sizeof(double), 1, fp);
       }
     }
   }
@@ -484,17 +485,17 @@ void PairSpinExchange::read_restart(FILE *fp)
       MPI_Bcast(&setflag[i][j],1,MPI_INT,0,world);
       if (setflag[i][j]) {
         if (me == 0) {
-          fread(&J1_mag[i][j],sizeof(double),1,fp);
-          fread(&J1_mech[i][j],sizeof(double),1,fp);
-          fread(&J2[i][j],sizeof(double),1,fp);
-          fread(&J2[i][j],sizeof(double),1,fp);
-          fread(&cut_spin_exchange[i][j],sizeof(double),1,fp);
+          fread(&J1_mag[i][j], sizeof(double), 1, fp);
+          fread(&J1_mech[i][j], sizeof(double), 1, fp);
+          fread(&J2[i][j], sizeof(double), 1, fp);
+          fread(&J2[i][j], sizeof(double), 1, fp);
+          fread(&cut_spin_exchange[i][j], sizeof(double), 1, fp);
         }
-        MPI_Bcast(&J1_mag[i][j],1,MPI_DOUBLE,0,world);
-        MPI_Bcast(&J1_mech[i][j],1,MPI_DOUBLE,0,world);
-        MPI_Bcast(&J2[i][j],1,MPI_DOUBLE,0,world);
-        MPI_Bcast(&J3[i][j],1,MPI_DOUBLE,0,world);
-        MPI_Bcast(&cut_spin_exchange[i][j],1,MPI_DOUBLE,0,world);
+        MPI_Bcast(&J1_mag[i][j], 1, MPI_DOUBLE, 0, world);
+        MPI_Bcast(&J1_mech[i][j], 1, MPI_DOUBLE, 0, world);
+        MPI_Bcast(&J2[i][j], 1, MPI_DOUBLE, 0, world);
+        MPI_Bcast(&J3[i][j], 1, MPI_DOUBLE, 0, world);
+        MPI_Bcast(&cut_spin_exchange[i][j], 1, MPI_DOUBLE, 0, world);
       }
     }
   }
@@ -507,9 +508,9 @@ void PairSpinExchange::read_restart(FILE *fp)
 
 void PairSpinExchange::write_restart_settings(FILE *fp)
 {
-  fwrite(&cut_spin_exchange_global,sizeof(double),1,fp);
-  fwrite(&offset_flag,sizeof(int),1,fp);
-  fwrite(&mix_flag,sizeof(int),1,fp);
+  fwrite(&cut_spin_exchange_global, sizeof(double), 1, fp);
+  fwrite(&offset_flag, sizeof(int), 1, fp);
+  fwrite(&mix_flag, sizeof(int), 1, fp);
 }
 
 /* ----------------------------------------------------------------------
@@ -519,12 +520,12 @@ void PairSpinExchange::write_restart_settings(FILE *fp)
 void PairSpinExchange::read_restart_settings(FILE *fp)
 {
   if (comm->me == 0) {
-    fread(&cut_spin_exchange_global,sizeof(double),1,fp);
-    fread(&offset_flag,sizeof(int),1,fp);
-    fread(&mix_flag,sizeof(int),1,fp);
+    fread(&cut_spin_exchange_global, sizeof(double), 1, fp);
+    fread(&offset_flag, sizeof(int), 1, fp);
+    fread(&mix_flag, sizeof(int), 1, fp);
   }
-  MPI_Bcast(&cut_spin_exchange_global,1,MPI_DOUBLE,0,world);
-  MPI_Bcast(&offset_flag,1,MPI_INT,0,world);
-  MPI_Bcast(&mix_flag,1,MPI_INT,0,world);
+  MPI_Bcast(&cut_spin_exchange_global, 1, MPI_DOUBLE, 0, world);
+  MPI_Bcast(&offset_flag, 1, MPI_INT, 0, world);
+  MPI_Bcast(&mix_flag, 1, MPI_INT, 0, world);
 }
 

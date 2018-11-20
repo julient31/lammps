@@ -22,10 +22,10 @@ PairStyle(spin/magelec,PairSpinMagelec)
 
 #include "pair_spin.h"
 
-namespace LAMMPS_NS {
+namespace LAMMPS_NS{
 
-class PairSpinMagelec : public PairSpin {
- public:
+class PairSpinMagelec : public PairSpin{
+public:
   PairSpinMagelec(class LAMMPS *);
   virtual ~PairSpinMagelec();
   void settings(int, char **);
@@ -45,20 +45,20 @@ class PairSpinMagelec : public PairSpin {
   void write_restart_settings(FILE *);
   void read_restart_settings(FILE *);
 
-  double cut_spin_magelec_global;	// global me cutoff
+  double cut_spin_magelec_global; // global me cutoff
 
- protected:
-  double **ME, **ME_mech;		// magelec coeff in eV
-  double **v_mex, **v_mey, **v_mez;	// magelec direction
-  double **cut_spin_magelec;		// magelec cutoff distance
+protected:
+  double **ME, **ME_mech;           // magelec coeff in eV
+  double **v_mex, **v_mey, **v_mez; // magelec direction
+  double **cut_spin_magelec;        // magelec cutoff distance
 
-  int lattice_flag;                     // flag for mech force computation
-  class FixNVESpin *lockfixnvespin;     // ptr to FixNVESpin for setups
+  int lattice_flag;                 // flag for mech force computation
+  class FixNVESpin *lockfixnvespin; // ptr to FixNVESpin for setups
 
   void allocate();
 };
 
-}
+} // namespace LAMMPS_NS
 
 #endif
 #endif

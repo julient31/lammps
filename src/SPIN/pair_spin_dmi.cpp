@@ -295,11 +295,11 @@ void PairSpinDmi::compute(int eflag, int vflag)
 
       // compute dmi interaction
 
-      if (rsq <= local_cut2) {
-	compute_dmi(i,j,eij,fmi,spj);
-	if (lattice_flag) {
-	  compute_dmi_mech(i,j,rsq,eij,fi,spi,spj);
-	}
+      if (rsq <= local_cut2){
+        compute_dmi(i, j, eij, fmi, spj);
+        if (lattice_flag){
+          compute_dmi_mech(i, j, rsq, eij, fi, spi, spj);
+        }
       }
 
       f[i][0] += fi[0];	
@@ -309,19 +309,21 @@ void PairSpinDmi::compute(int eflag, int vflag)
       fm[i][1] += fmi[1];	  	
       fm[i][2] += fmi[2];
 
-      if (newton_pair || j < nlocal) {
-	f[j][0] -= fi[0];	
-        f[j][1] -= fi[1];	  	
+      if (newton_pair || j < nlocal){
+        f[j][0] -= fi[0];
+        f[j][1] -= fi[1];
         f[j][2] -= fi[2];
       }
 
-      if (eflag) {
-	evdwl -= (spi[0]*fmi[0] + spi[1]*fmi[1] + spi[2]*fmi[2]);
-	evdwl *= hbar;
-      } else evdwl = 0.0;
+      if (eflag){
+        evdwl -= (spi[0] * fmi[0] + spi[1] * fmi[1] + spi[2] * fmi[2]);
+        evdwl *= hbar;
+      }
+      else
+        evdwl = 0.0;
 
-      if (evflag) ev_tally_xyz(i,j,nlocal,newton_pair,
-	  evdwl,ecoul,fi[0],fi[1],fi[2],delx,dely,delz);
+      if (evflag) ev_tally_xyz(i, j, nlocal, newton_pair,
+                  evdwl, ecoul, fi[0], fi[1], fi[2], delx, dely, delz);
     }
   }
 
@@ -397,17 +399,17 @@ void PairSpinDmi::compute_dmi(int i, int j, double eij[3], double fmi[3], double
 {
   int *type = atom->type;
   int itype, jtype;
-  double dmix, dmiy, dmiz;	
+  double dmix, dmiy, dmiz;
   itype = type[i];
   jtype = type[j];
 
-  dmix = eij[1]*v_dmz[itype][jtype] - eij[2]*v_dmy[itype][jtype];
-  dmiy = eij[2]*v_dmx[itype][jtype] - eij[0]*v_dmz[itype][jtype];
-  dmiz = eij[0]*v_dmy[itype][jtype] - eij[1]*v_dmx[itype][jtype];
+  dmix = eij[1] * v_dmz[itype][jtype] - eij[2] * v_dmy[itype][jtype];
+  dmiy = eij[2] * v_dmx[itype][jtype] - eij[0] * v_dmz[itype][jtype];
+  dmiz = eij[0] * v_dmy[itype][jtype] - eij[1] * v_dmx[itype][jtype];
 
-  fmi[0] -= (spj[1]*dmiz - spj[2]*dmiy);
-  fmi[1] -= (spj[2]*dmix - spj[0]*dmiz);
-  fmi[2] -= (spj[0]*dmiy - spj[1]*dmix);
+  fmi[0] -= (spj[1] * dmiz - spj[2] * dmiy);
+  fmi[1] -= (spj[2] * dmix - spj[0] * dmiz);
+  fmi[2] -= (spj[0] * dmiy - spj[1] * dmix);
 }
 
 /* ----------------------------------------------------------------------
@@ -419,28 +421,28 @@ void PairSpinDmi::compute_dmi_mech(int i, int j, double rsq, double /*eij*/[3],
 {
   int *type = atom->type;
   int itype, jtype;
-  double dmix,dmiy,dmiz;	
+  double dmix, dmiy, dmiz;
   itype = type[i];
   jtype = type[j];
-  double csx,csy,csz,cdmx,cdmy,cdmz,irij;
+  double csx, csy, csz, cdmx, cdmy, cdmz, irij;
 
-  irij = 1.0/sqrt(rsq);
+  irij = 1.0 / sqrt(rsq);
 
   dmix = vmech_dmx[itype][jtype];
   dmiy = vmech_dmy[itype][jtype];
   dmiz = vmech_dmz[itype][jtype];
 
-  csx = (spi[1]*spj[2] - spi[2]*spj[1]);
-  csy = (spi[2]*spj[0] - spi[0]*spj[2]);
-  csz = (spi[0]*spj[1] - spi[1]*spj[0]);
+  csx = (spi[1] * spj[2] - spi[2] * spj[1]);
+  csy = (spi[2] * spj[0] - spi[0] * spj[2]);
+  csz = (spi[0] * spj[1] - spi[1] * spj[0]);
 
-  cdmx = (dmiy*csz - dmiz*csy);
-  cdmy = (dmiz*csx - dmix*csz);
-  cdmz = (dmix*csy - dmiy*csz);
+  cdmx = (dmiy * csz - dmiz * csy);
+  cdmy = (dmiz * csx - dmix * csz);
+  cdmz = (dmix * csy - dmiy * csz);
 
-  fi[0] += irij*cdmx;
-  fi[1] += irij*cdmy;
-  fi[2] += irij*cdmz;
+  fi[0] += irij * cdmx;
+  fi[1] += irij * cdmy;
+  fi[2] += irij * cdmz;
 }
 
 /* ----------------------------------------------------------------------
@@ -457,17 +459,15 @@ void PairSpinDmi::allocate()
     for (int j = i; j <= n; j++)
       setflag[i][j] = 0;
 
-  memory->create(cut_spin_dmi,n+1,n+1,"pair:cut_spin_dmi");
-  memory->create(DM,n+1,n+1,"pair:DM");
-  memory->create(v_dmx,n+1,n+1,"pair:DM_vector_x");
-  memory->create(v_dmy,n+1,n+1,"pair:DM_vector_y");
-  memory->create(v_dmz,n+1,n+1,"pair:DM_vector_z");
-  memory->create(vmech_dmx,n+1,n+1,"pair:DMmech_vector_x");
-  memory->create(vmech_dmy,n+1,n+1,"pair:DMmech_vector_y");
-  memory->create(vmech_dmz,n+1,n+1,"pair:DMmech_vector_z");
-
-  memory->create(cutsq,n+1,n+1,"pair:cutsq");
-
+  memory->create(cut_spin_dmi, n + 1, n + 1, "pair:cut_spin_dmi");
+  memory->create(DM, n + 1, n + 1, "pair:DM");
+  memory->create(v_dmx, n + 1, n + 1, "pair:DM_vector_x");
+  memory->create(v_dmy, n + 1, n + 1, "pair:DM_vector_y");
+  memory->create(v_dmz, n + 1, n + 1, "pair:DM_vector_z");
+  memory->create(vmech_dmx, n + 1, n + 1, "pair:DMmech_vector_x");
+  memory->create(vmech_dmy, n + 1, n + 1, "pair:DMmech_vector_y");
+  memory->create(vmech_dmz, n + 1, n + 1, "pair:DMmech_vector_z");
+  memory->create(cutsq, n + 1, n + 1, "pair:cutsq");
 }
 
 
@@ -481,17 +481,17 @@ void PairSpinDmi::write_restart(FILE *fp)
 
   int i,j;
   for (i = 1; i <= atom->ntypes; i++)
-    for (j = i; j <= atom->ntypes; j++) {
-      fwrite(&setflag[i][j],sizeof(int),1,fp);
-      if (setflag[i][j]) {
-	fwrite(&DM[i][j],sizeof(double),1,fp);
-        fwrite(&v_dmx[i][j],sizeof(double),1,fp);
-        fwrite(&v_dmy[i][j],sizeof(double),1,fp);
-        fwrite(&v_dmz[i][j],sizeof(double),1,fp);
-        fwrite(&vmech_dmx[i][j],sizeof(double),1,fp);
-        fwrite(&vmech_dmy[i][j],sizeof(double),1,fp);
-        fwrite(&vmech_dmz[i][j],sizeof(double),1,fp);
-        fwrite(&cut_spin_dmi[i][j],sizeof(double),1,fp);
+    for (j = i; j <= atom->ntypes; j++){
+      fwrite(&setflag[i][j], sizeof(int), 1, fp);
+      if (setflag[i][j]){
+        fwrite(&DM[i][j], sizeof(double), 1, fp);
+        fwrite(&v_dmx[i][j], sizeof(double), 1, fp);
+        fwrite(&v_dmy[i][j], sizeof(double), 1, fp);
+        fwrite(&v_dmz[i][j], sizeof(double), 1, fp);
+        fwrite(&vmech_dmx[i][j], sizeof(double), 1, fp);
+        fwrite(&vmech_dmy[i][j], sizeof(double), 1, fp);
+        fwrite(&vmech_dmz[i][j], sizeof(double), 1, fp);
+        fwrite(&cut_spin_dmi[i][j], sizeof(double), 1, fp);
       }
     }
 }
@@ -510,27 +510,27 @@ void PairSpinDmi::read_restart(FILE *fp)
   int me = comm->me;
   for (i = 1; i <= atom->ntypes; i++) {
     for (j = i; j <= atom->ntypes; j++) {
-      if (me == 0) fread(&setflag[i][j],sizeof(int),1,fp);
-      MPI_Bcast(&setflag[i][j],1,MPI_INT,0,world);
+      if (me == 0) fread(&setflag[i][j], sizeof(int), 1, fp);
+      MPI_Bcast(&setflag[i][j], 1, MPI_INT, 0, world);
       if (setflag[i][j]) {
         if (me == 0) {
-          fread(&DM[i][j],sizeof(double),1,fp);
-          fread(&v_dmx[i][j],sizeof(double),1,fp);
-          fread(&v_dmy[i][j],sizeof(double),1,fp);
-          fread(&v_dmz[i][j],sizeof(double),1,fp);
-          fread(&vmech_dmx[i][j],sizeof(double),1,fp);
-          fread(&vmech_dmy[i][j],sizeof(double),1,fp);
-          fread(&vmech_dmz[i][j],sizeof(double),1,fp);
-          fread(&cut_spin_dmi[i][j],sizeof(double),1,fp);
+          fread(&DM[i][j], sizeof(double), 1, fp);
+          fread(&v_dmx[i][j], sizeof(double), 1, fp);
+          fread(&v_dmy[i][j], sizeof(double), 1, fp);
+          fread(&v_dmz[i][j], sizeof(double), 1, fp);
+          fread(&vmech_dmx[i][j], sizeof(double), 1, fp);
+          fread(&vmech_dmy[i][j], sizeof(double), 1, fp);
+          fread(&vmech_dmz[i][j], sizeof(double), 1, fp);
+          fread(&cut_spin_dmi[i][j], sizeof(double), 1, fp);
         }
-        MPI_Bcast(&DM[i][j],1,MPI_DOUBLE,0,world);
-        MPI_Bcast(&v_dmx[i][j],1,MPI_DOUBLE,0,world);
-        MPI_Bcast(&v_dmy[i][j],1,MPI_DOUBLE,0,world);
-        MPI_Bcast(&v_dmz[i][j],1,MPI_DOUBLE,0,world);
-        MPI_Bcast(&vmech_dmx[i][j],1,MPI_DOUBLE,0,world);
-        MPI_Bcast(&vmech_dmy[i][j],1,MPI_DOUBLE,0,world);
-        MPI_Bcast(&vmech_dmz[i][j],1,MPI_DOUBLE,0,world);
-        MPI_Bcast(&cut_spin_dmi[i][j],1,MPI_DOUBLE,0,world);
+        MPI_Bcast(&DM[i][j], 1, MPI_DOUBLE, 0, world);
+        MPI_Bcast(&v_dmx[i][j], 1, MPI_DOUBLE, 0, world);
+        MPI_Bcast(&v_dmy[i][j], 1, MPI_DOUBLE, 0, world);
+        MPI_Bcast(&v_dmz[i][j], 1, MPI_DOUBLE, 0, world);
+        MPI_Bcast(&vmech_dmx[i][j], 1, MPI_DOUBLE, 0, world);
+        MPI_Bcast(&vmech_dmy[i][j], 1, MPI_DOUBLE, 0, world);
+        MPI_Bcast(&vmech_dmz[i][j], 1, MPI_DOUBLE, 0, world);
+        MPI_Bcast(&cut_spin_dmi[i][j], 1, MPI_DOUBLE, 0, world);
       }
     }
   }
@@ -543,9 +543,9 @@ void PairSpinDmi::read_restart(FILE *fp)
 
 void PairSpinDmi::write_restart_settings(FILE *fp)
 {
-  fwrite(&cut_spin_dmi_global,sizeof(double),1,fp);
-  fwrite(&offset_flag,sizeof(int),1,fp);
-  fwrite(&mix_flag,sizeof(int),1,fp);
+  fwrite(&cut_spin_dmi_global, sizeof(double), 1, fp);
+  fwrite(&offset_flag, sizeof(int), 1, fp);
+  fwrite(&mix_flag, sizeof(int), 1, fp);
 }
 
 /* ----------------------------------------------------------------------
@@ -555,11 +555,11 @@ void PairSpinDmi::write_restart_settings(FILE *fp)
 void PairSpinDmi::read_restart_settings(FILE *fp)
 {
   if (comm->me == 0) {
-    fread(&cut_spin_dmi_global,sizeof(double),1,fp);
-    fread(&offset_flag,sizeof(int),1,fp);
-    fread(&mix_flag,sizeof(int),1,fp);
+    fread(&cut_spin_dmi_global, sizeof(double), 1, fp);
+    fread(&offset_flag, sizeof(int), 1, fp);
+    fread(&mix_flag, sizeof(int), 1, fp);
   }
-  MPI_Bcast(&cut_spin_dmi_global,1,MPI_DOUBLE,0,world);
-  MPI_Bcast(&offset_flag,1,MPI_INT,0,world);
-  MPI_Bcast(&mix_flag,1,MPI_INT,0,world);
+  MPI_Bcast(&cut_spin_dmi_global, 1, MPI_DOUBLE, 0, world);
+  MPI_Bcast(&offset_flag, 1, MPI_INT, 0, world);
+  MPI_Bcast(&mix_flag, 1, MPI_INT, 0, world);
 }

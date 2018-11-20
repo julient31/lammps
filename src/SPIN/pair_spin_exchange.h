@@ -22,10 +22,10 @@ PairStyle(spin/exchange,PairSpinExchange)
 
 #include "pair_spin.h"
 
-namespace LAMMPS_NS {
+namespace LAMMPS_NS{
 
-class PairSpinExchange : public PairSpin {
- public:
+class PairSpinExchange : public PairSpin{
+public:
   PairSpinExchange(class LAMMPS *);
   virtual ~PairSpinExchange();
   void settings(int, char **);
@@ -45,21 +45,21 @@ class PairSpinExchange : public PairSpin {
   void write_restart_settings(FILE *);
   void read_restart_settings(FILE *);
 
-  double cut_spin_exchange_global;	// global exchange cutoff distance
+  double cut_spin_exchange_global; // global exchange cutoff distance
 
- protected:
-  double **J1_mag;			// exchange coeffs in eV
-  double **J1_mech;			// mech exchange coeffs in
-  double **J2, **J3;                    // J1 in eV, J2 adim, J3 in Ang
-  double **cut_spin_exchange;		// cutoff distance exchange
+protected:
+  double **J1_mag;            // exchange coeffs in eV
+  double **J1_mech;           // mech exchange coeffs in
+  double **J2, **J3;          // J1 in eV, J2 adim, J3 in Ang
+  double **cut_spin_exchange; // cutoff distance exchange
 
-  int lattice_flag; 			// flag for mech force computation
-  class FixNVESpin *lockfixnvespin;	// ptr to FixNVESpin for setups
+  int lattice_flag;                 // flag for mech force computation
+  class FixNVESpin *lockfixnvespin; // ptr to FixNVESpin for setups
 
   void allocate();
 };
 
-}
+} // namespace LAMMPS_NS
 
 #endif
 #endif

@@ -18,7 +18,7 @@
    Please cite the related publication:
    Tranchida, J., Plimpton, S. J., Thibaudeau, P., & Thompson, A. P. (2018).
    Massively parallel symplectic algorithm for coupled magnetic spin dynamics
-   and molecular dynamics. Journal of Computational Physics.
+   and molecular dynamics. Journal of Computational Physics, 372, 406-425.
 ------------------------------------------------------------------------- */
 
 #include <cmath>

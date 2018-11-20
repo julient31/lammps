@@ -22,12 +22,12 @@ FixStyle(precession/spin,FixPrecessionSpin)
 
 #include "fix.h"
 
-namespace LAMMPS_NS {
+namespace LAMMPS_NS{
 
-class FixPrecessionSpin : public Fix {
+class FixPrecessionSpin : public Fix{
   friend class FixPour;
 
- public:
+public:
   FixPrecessionSpin(class LAMMPS *, int, char **);
   ~FixPrecessionSpin();
   int setmask();
@@ -42,8 +42,8 @@ class FixPrecessionSpin : public Fix {
   void compute_zeeman(int, double *);
   void compute_anisotropy(double *, double *);
 
- protected:
-  int style; 			// style of the magnetic precession
+protected:
+  int style; // style of the magnetic precession
 
   double degree2rad;
   double hbar;
@@ -61,19 +61,18 @@ class FixPrecessionSpin : public Fix {
 
   double H_field;
   double nhx, nhy, nhz;
-  double hx, hy, hz; 		// temp. force variables
+  double hx, hy, hz; // temp. force variables
 
   // magnetic anisotropy intensity and direction
 
   double Ka;
   double nax, nay, naz;
-  double Kax, Kay, Kaz; 	// temp. force variables
+  double Kax, Kay, Kaz; // temp. force variables
 
   void set_magneticprecession();
-
 };
 
-}
+} // namespace LAMMPS_NS
 
 #endif
 #endif

@@ -13,7 +13,7 @@
 
 #ifdef COMPUTE_CLASS
 
-ComputeStyle(spin,ComputeSpin)
+ComputeStyle(spin, ComputeSpin)
 
 #else
 
@@ -22,27 +22,27 @@ ComputeStyle(spin,ComputeSpin)
 
 #include "compute.h"
 
-namespace LAMMPS_NS {
+namespace LAMMPS_NS{
 
-class ComputeSpin : public Compute {
- public:
+class ComputeSpin : public Compute{
+public:
   ComputeSpin(class LAMMPS *, int, char **);
   ~ComputeSpin();
   void init();
   void compute_vector();
 
- private:
-  double kb,hbar;
+private:
+  double kb, hbar;
 
   void allocate();
 };
 
-}
+} // namespace LAMMPS_NS
 
 #endif
 #endif
 
-/* ERROR/WARNING messages:
+    /* ERROR/WARNING messages:
 
 E: Illegal ... command
 

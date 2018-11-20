@@ -18,7 +18,7 @@
    Please cite the related publication:
    Tranchida, J., Plimpton, S. J., Thibaudeau, P., & Thompson, A. P. (2018).
    Massively parallel symplectic algorithm for coupled magnetic spin dynamics
-   and molecular dynamics. Journal of Computational Physics.
+   and molecular dynamics. Journal of Computational Physics, 372, 406-425.
 ------------------------------------------------------------------------- */
 
 #include <cmath>
@@ -61,6 +61,9 @@ static const char cite_fix_nve_spin[] =
   "author={Tranchida, J and Plimpton, SJ and Thibaudeau, P and Thompson, AP},\n"
   "journal={Journal of Computational Physics},\n"
   "year={2018},\n"
+  "pages={406--425},\n"
+  "volume={372},\n"
+  "doi={10.1016/j.jcp.2018.06.042},\n"
   "publisher={Elsevier}\n"
   "}\n\n";
 
@@ -84,7 +87,6 @@ FixNVESpin::FixNVESpin(LAMMPS *lmp, int narg, char **arg) :
   nlocal_max = 0;
   npairs = 0;
   npairspin = 0;
-
 
   // checking if map array or hash is defined
 
@@ -129,7 +131,6 @@ FixNVESpin::FixNVESpin(LAMMPS *lmp, int narg, char **arg) :
   precession_spin_flag = 0;
   maglangevin_flag = 0;
   tdamp_flag = temp_flag = 0;
-
 }
 
 /* ---------------------------------------------------------------------- */
@@ -180,7 +181,7 @@ void FixNVESpin::init()
     npairs = pair->instance_total;
     for (int i = 0; i<npairs; i++) {
       if (force->pair_match("spin",0,i)) {
-	npairspin ++;
+        npairspin++;
       }
     }
   }
@@ -200,8 +201,8 @@ void FixNVESpin::init()
   } else if (npairspin > 1) {
     for (int i = 0; i<npairs; i++) {
       if (force->pair_match("spin",0,i)) {
-	spin_pairs[count] = (PairSpin *) force->pair_match("spin",0,i);
-	count++;
+        spin_pairs[count] = (PairSpin *)force->pair_match("spin", 0, i);
+        count++;
       }
     }
   }
@@ -213,8 +214,7 @@ void FixNVESpin::init()
 
   // ptrs FixPrecessionSpin classes
 
-  int iforce;
-  for (iforce = 0; iforce < modify->nfix; iforce++) {
+  for (int iforce = 0; iforce < modify->nfix; iforce++) {
     if (strstr(modify->fix[iforce]->style,"precession/spin")) {
       precession_spin_flag = 1;
       lockprecessionspin = (FixPrecessionSpin *) modify->fix[iforce];
@@ -223,7 +223,7 @@ void FixNVESpin::init()
 
   // ptrs on the FixLangevinSpin class
 
-  for (iforce = 0; iforce < modify->nfix; iforce++) {
+  for (int iforce = 0; iforce < modify->nfix; iforce++) {
     if (strstr(modify->fix[iforce]->style,"langevin/spin")) {
       maglangevin_flag = 1;
       locklangevinspin = (FixLangevinSpin *) modify->fix[iforce];
@@ -247,13 +247,12 @@ void FixNVESpin::init()
   // init. size of stacking lists (sectoring)
 
   nlocal_max = atom->nlocal;
-  stack_head = memory->grow(stack_head,nsectors,"NVE/spin:stack_head");
-  stack_foot = memory->grow(stack_foot,nsectors,"NVE/spin:stack_foot");
-  backward_stacks = memory->grow(backward_stacks,nlocal_max,"NVE/spin:backward_stacks");
-  forward_stacks = memory->grow(forward_stacks,nlocal_max,"NVE/spin:forward_stacks");
+  stack_head = memory->grow(stack_head, nsectors, "NVE/spin:stack_head");
+  stack_foot = memory->grow(stack_foot, nsectors, "NVE/spin:stack_foot");
+  backward_stacks = memory->grow(backward_stacks, nlocal_max, "NVE/spin:backward_stacks");
+  forward_stacks = memory->grow(forward_stacks, nlocal_max, "NVE/spin:forward_stacks");
   if (nlocal_max == 0)
-    error->all(FLERR,"Incorrect value of nlocal_max");
-
+    error->all(FLERR, "Incorrect value of nlocal_max");
 }
 
 /* ---------------------------------------------------------------------- */
@@ -292,19 +291,21 @@ void FixNVESpin::initial_integrate(int /*vflag*/)
     for (int j = 0; j < nsectors; j++) {	// advance quarter s for nlocal
       comm->forward_comm();
       int i = stack_foot[j];
-      while (i >= 0) {
+      while (i >= 0)
+      {
         ComputeInteractionsSpin(i);
-    	AdvanceSingleSpin(i);
-	i = forward_stacks[i];
+        AdvanceSingleSpin(i);
+        i = forward_stacks[i];
       }
     }
     for (int j = nsectors-1; j >= 0; j--) {	// advance quarter s for nlocal
       comm->forward_comm();
       int i = stack_head[j];
-      while (i >= 0) {
+      while (i >= 0)
+      {
         ComputeInteractionsSpin(i);
-    	AdvanceSingleSpin(i);
-	i = backward_stacks[i];
+        AdvanceSingleSpin(i);
+        i = backward_stacks[i];
       }
     }
   } else if (sector_flag == 0) {		// serial seq. update
@@ -337,19 +338,21 @@ void FixNVESpin::initial_integrate(int /*vflag*/)
     for (int j = 0; j < nsectors; j++) {	// advance quarter s for nlocal
       comm->forward_comm();
       int i = stack_foot[j];
-      while (i >= 0) {
+      while (i >= 0)
+      {
         ComputeInteractionsSpin(i);
-    	AdvanceSingleSpin(i);
-	i = forward_stacks[i];
+        AdvanceSingleSpin(i);
+        i = forward_stacks[i];
       }
     }
     for (int j = nsectors-1; j >= 0; j--) {	// advance quarter s for nlocal
       comm->forward_comm();
       int i = stack_head[j];
-      while (i >= 0) {
+      while (i >= 0)
+      {
         ComputeInteractionsSpin(i);
-    	AdvanceSingleSpin(i);
-	i = backward_stacks[i];
+        AdvanceSingleSpin(i);
+        i = backward_stacks[i];
       }
     }
   } else if (sector_flag == 0) {		// serial seq. update
@@ -386,8 +389,8 @@ void FixNVESpin::pre_neighbor()
 
   if (nlocal_max < nlocal) {			// grow linked lists if necessary
     nlocal_max = nlocal;
-    backward_stacks = memory->grow(backward_stacks,nlocal_max,"NVE/spin:backward_stacks");
-    forward_stacks = memory->grow(forward_stacks,nlocal_max,"NVE/spin:forward_stacks");
+    backward_stacks = memory->grow(backward_stacks, nlocal_max, "NVE/spin:backward_stacks");
+    forward_stacks = memory->grow(forward_stacks, nlocal_max, "NVE/spin:forward_stacks");
   }
 
   for (int j = 0; j < nsectors; j++) {
@@ -497,11 +500,11 @@ void FixNVESpin::sectoring()
   }
 
   if (rv == 0.0)
-   error->all(FLERR,"Illegal sectoring operation");
+    error->all(FLERR, "Illegal sectoring operation");
 
-  double rax = rsx/rv;
-  double ray = rsy/rv;
-  double raz = rsz/rv;
+  double rax = rsx / rv;
+  double ray = rsy / rv;
+  double raz = rsz / rv;
 
   sec[0] = 1;
   sec[1] = 1;
@@ -510,10 +513,10 @@ void FixNVESpin::sectoring()
   if (ray >= 2.0) sec[1] = 2;
   if (raz >= 2.0) sec[2] = 2;
 
-  nsectors = sec[0]*sec[1]*sec[2];
+  nsectors = sec[0] * sec[1] * sec[2];
 
   if (sector_flag == 1 && nsectors != 8)
-    error->all(FLERR,"Illegal sectoring operation");
+    error->all(FLERR, "Illegal sectoring operation");
 
   rsec[0] = rsx;
   rsec[1] = rsy;
@@ -542,7 +545,7 @@ int FixNVESpin::coords2sector(double *x)
   seci[1] = x[1] > (sublo[1] + rsec[1]);
   seci[2] = x[2] > (sublo[2] + rsec[2]);
 
-  nseci = (seci[0] + 2*seci[1] + 4*seci[2]);
+  nseci = (seci[0] + 2 * seci[1] + 4 * seci[2]);
 
   return nseci;
 }
@@ -557,34 +560,34 @@ void FixNVESpin::AdvanceSingleSpin(int i)
   int *sametag = atom->sametag;
   double **sp = atom->sp;
   double **fm = atom->fm;
-  double msq,scale,fm2,energy,dts2;
-  double cp[3],g[3];
+  double msq, scale, fm2, energy, dts2;
+  double cp[3], g[3];
 
   cp[0] = cp[1] = cp[2] = 0.0;
   g[0] = g[1] = g[2] = 0.0;
-  fm2 = (fm[i][0]*fm[i][0])+(fm[i][1]*fm[i][1])+(fm[i][2]*fm[i][2]);
-  energy = (sp[i][0]*fm[i][0])+(sp[i][1]*fm[i][1])+(sp[i][2]*fm[i][2]);
-  dts2 = dts*dts;		
+  fm2 = (fm[i][0] * fm[i][0]) + (fm[i][1] * fm[i][1]) + (fm[i][2] * fm[i][2]);
+  energy = (sp[i][0] * fm[i][0]) + (sp[i][1] * fm[i][1]) + (sp[i][2] * fm[i][2]);
+  dts2 = dts * dts;
 
-  cp[0] = fm[i][1]*sp[i][2]-fm[i][2]*sp[i][1];
-  cp[1] = fm[i][2]*sp[i][0]-fm[i][0]*sp[i][2];
-  cp[2] = fm[i][0]*sp[i][1]-fm[i][1]*sp[i][0];
+  cp[0] = fm[i][1] * sp[i][2] - fm[i][2] * sp[i][1];
+  cp[1] = fm[i][2] * sp[i][0] - fm[i][0] * sp[i][2];
+  cp[2] = fm[i][0] * sp[i][1] - fm[i][1] * sp[i][0];
 
-  g[0] = sp[i][0]+cp[0]*dts;
-  g[1] = sp[i][1]+cp[1]*dts;
-  g[2] = sp[i][2]+cp[2]*dts;
-			
-  g[0] += (fm[i][0]*energy-0.5*sp[i][0]*fm2)*0.5*dts2;
-  g[1] += (fm[i][1]*energy-0.5*sp[i][1]*fm2)*0.5*dts2;
-  g[2] += (fm[i][2]*energy-0.5*sp[i][2]*fm2)*0.5*dts2;
-			
-  g[0] /= (1+0.25*fm2*dts2);
-  g[1] /= (1+0.25*fm2*dts2);
-  g[2] /= (1+0.25*fm2*dts2);
-			
+  g[0] = sp[i][0] + cp[0] * dts;
+  g[1] = sp[i][1] + cp[1] * dts;
+  g[2] = sp[i][2] + cp[2] * dts;
+
+  g[0] += (fm[i][0] * energy - 0.5 * sp[i][0] * fm2) * 0.5 * dts2;
+  g[1] += (fm[i][1] * energy - 0.5 * sp[i][1] * fm2) * 0.5 * dts2;
+  g[2] += (fm[i][2] * energy - 0.5 * sp[i][2] * fm2) * 0.5 * dts2;
+
+  g[0] /= (1 + 0.25 * fm2 * dts2);
+  g[1] /= (1 + 0.25 * fm2 * dts2);
+  g[2] /= (1 + 0.25 * fm2 * dts2);
+
   sp[i][0] = g[0];
   sp[i][1] = g[1];
-  sp[i][2] = g[2];			
+  sp[i][2] = g[2];
 
   // renormalization (check if necessary)
 

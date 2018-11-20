@@ -18,7 +18,7 @@
    Please cite the related publication:
    Tranchida, J., Plimpton, S. J., Thibaudeau, P., & Thompson, A. P. (2018).
    Massively parallel symplectic algorithm for coupled magnetic spin dynamics
-   and molecular dynamics. Journal of Computational Physics.
+   and molecular dynamics. Journal of Computational Physics, 372, 406-425.
 ------------------------------------------------------------------------- */
 
 #include <mpi.h>
@@ -125,24 +125,24 @@ void FixLangevinSpin::init()
   }
   if (flag_force >= flag_lang) error->all(FLERR,"Fix langevin/spin has to come after all other spin fixes");
 
-  memory->create(spi,3,"langevin:spi");
-  memory->create(fmi,3,"langevin:fmi");
+  memory->create(spi, 3, "langevin:spi");
+  memory->create(fmi, 3, "langevin:fmi");
 
-  gil_factor = 1.0/(1.0+(alpha_t)*(alpha_t));
+  gil_factor = 1.0 / (1.0 + (alpha_t * alpha_t));
   dts = update->dt;
 
-  double hbar = force->hplanck/MY_2PI;	// eV/(rad.THz)
-  double kb = force->boltz;		// eV/K
-  D = (MY_2PI*alpha_t*gil_factor*kb*temp);
-  D /= (hbar*dts);
-  sigma = sqrt(2.0*D);
+  double hbar = force->hplanck / MY_2PI; // eV/(rad.THz)
+  double kb = force->boltz;              // eV/K
+  D = (MY_2PI * alpha_t * gil_factor * kb * temp);
+  D /= (hbar * dts);
+  sigma = sqrt(2.0 * D);
 }
 
 /* ---------------------------------------------------------------------- */
 
 void FixLangevinSpin::setup(int vflag)
 {
-  if (strstr(update->integrate_style,"verlet"))
+  if (strstr(update->integrate_style, "verlet"))
     post_force(vflag);
   else {
     ((Respa *) update->integrate)->copy_flevel_f(nlevels_respa-1);
@@ -155,15 +155,15 @@ void FixLangevinSpin::setup(int vflag)
 
 void FixLangevinSpin::add_tdamping(double spi[3], double fmi[3])
 {
-  double cpx = fmi[1]*spi[2] - fmi[2]*spi[1];
-  double cpy = fmi[2]*spi[0] - fmi[0]*spi[2];
-  double cpz = fmi[0]*spi[1] - fmi[1]*spi[0];
-	
+  double cpx = fmi[1] * spi[2] - fmi[2] * spi[1];
+  double cpy = fmi[2] * spi[0] - fmi[0] * spi[2];
+  double cpz = fmi[0] * spi[1] - fmi[1] * spi[0];
+
   // adding the transverse damping
 
-  fmi[0] -= alpha_t*cpx;
-  fmi[1] -= alpha_t*cpy;
-  fmi[2] -= alpha_t*cpz;
+  fmi[0] -= alpha_t * cpx;
+  fmi[1] -= alpha_t * cpy;
+  fmi[2] -= alpha_t * cpz;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -171,9 +171,9 @@ void FixLangevinSpin::add_tdamping(double spi[3], double fmi[3])
 void FixLangevinSpin::add_temperature(double fmi[3])
 {
 
-  double rx = sigma*(2.0*random->uniform() - 1.0);
-  double ry = sigma*(2.0*random->uniform() - 1.0);
-  double rz = sigma*(2.0*random->uniform() - 1.0);
+  double rx = sigma * (2.0 * random->uniform() - 1.0);
+  double ry = sigma * (2.0 * random->uniform() - 1.0);
+  double rz = sigma * (2.0 * random->uniform() - 1.0);
 
   // adding the random field
 

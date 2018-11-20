@@ -16,29 +16,30 @@
 
 #include "pair.h"
 
-namespace LAMMPS_NS {
+namespace LAMMPS_NS{
 
-class PairSpin : public Pair {
-friend class FixNVESpin;
- public:
+class PairSpin : public Pair{
+  friend class FixNVESpin;
+
+public:
   PairSpin(class LAMMPS *);
   virtual ~PairSpin();
   virtual void settings(int, char **);
   virtual void coeff(int, char **) {}
   virtual void init_style();
-  virtual double init_one(int, int) {return 0.0;}
-  virtual void *extract(const char *, int &) {return NULL;}
+  virtual double init_one(int, int) { return 0.0; }
+  virtual void *extract(const char *, int &) { return NULL; }
 
   virtual void compute(int, int) {}
   virtual void compute_single_pair(int, double *) {}
 
- protected:
-  double hbar;				// Planck constant (eV.ps.rad-1)
+protected:
+  double hbar; // Planck constant (eV.ps.rad-1)
 
   virtual void allocate() {}
 };
 
-}
+} // namespace LAMMPS_NS
 
 #endif
 

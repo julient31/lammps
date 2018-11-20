@@ -22,10 +22,10 @@ PairStyle(spin/neel,PairSpinNeel)
 
 #include "pair_spin.h"
 
-namespace LAMMPS_NS {
+namespace LAMMPS_NS{
 
-class PairSpinNeel : public PairSpin {
- public:
+class PairSpinNeel : public PairSpin{
+public:
   PairSpinNeel(class LAMMPS *);
   virtual ~PairSpinNeel();
   void settings(int, char **);
@@ -45,26 +45,24 @@ class PairSpinNeel : public PairSpin {
   void write_restart_settings(FILE *);
   void read_restart_settings(FILE *);
 
-  double cut_spin_neel_global;		// global neel cutoff distance
+  double cut_spin_neel_global; // global neel cutoff distance
 
- protected:
-
+protected:
   // pseudo-dipolar and pseudo-quadrupolar coeff.
 
-  double **g1, **g1_mech; 		// neel coeffs gij
-  double **g2, **g3; 			// g1 in eV, g2 adim, g3 in Ang
-  double **q1, **q1_mech; 		// neel coeffs qij
-  double **q2, **q3; 			// q1 in eV, q2 adim, q3 in Ang
-  double **cut_spin_neel;		// cutoff distance exchange
+  double **g1, **g1_mech; // neel coeffs gij
+  double **g2, **g3;      // g1 in eV, g2 adim, g3 in Ang
+  double **q1, **q1_mech; // neel coeffs qij
+  double **q2, **q3;      // q1 in eV, q2 adim, q3 in Ang
+  double **cut_spin_neel; // cutoff distance exchange
 
-  int lattice_flag;			// flag for mech force computation
-  class FixNVESpin *lockfixnvespin;	// ptr to FixNVESpin for setups
-
+  int lattice_flag;                 // flag for mech force computation
+  class FixNVESpin *lockfixnvespin; // ptr to FixNVESpin for setups
 
   void allocate();
 };
 
-}
+} // namespace LAMMPS_NS
 
 #endif
 #endif

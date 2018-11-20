@@ -18,7 +18,7 @@
    Please cite the related publication:
    Tranchida, J., Plimpton, S. J., Thibaudeau, P., & Thompson, A. P. (2018).
    Massively parallel symplectic algorithm for coupled magnetic spin dynamics
-   and molecular dynamics. Journal of Computational Physics.
+   and molecular dynamics. Journal of Computational Physics, 372, 406-425.
 ------------------------------------------------------------------------- */
 
 #include <cmath>
@@ -228,19 +228,19 @@ void FixPrecessionSpin::compute_single_precession(int i, double spi[3], double f
 void FixPrecessionSpin::compute_zeeman(int i, double fmi[3])
 {
   double **sp = atom->sp;
-  fmi[0] -= sp[i][3]*hx;
-  fmi[1] -= sp[i][3]*hy;
-  fmi[2] -= sp[i][3]*hz;
+  fmi[0] -= sp[i][3] * hx;
+  fmi[1] -= sp[i][3] * hy;
+  fmi[2] -= sp[i][3] * hz;
 }
 
 /* ---------------------------------------------------------------------- */
 
 void FixPrecessionSpin::compute_anisotropy(double spi[3], double fmi[3])
 {
-  double scalar = nax*spi[0] + nay*spi[1] + naz*spi[2];
-  fmi[0] += scalar*Kax;
-  fmi[1] += scalar*Kay;
-  fmi[2] += scalar*Kaz;
+  double scalar = nax * spi[0] + nay * spi[1] + naz * spi[2];
+  fmi[0] += scalar * Kax;
+  fmi[1] += scalar * Kay;
+  fmi[2] += scalar * Kaz;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -254,15 +254,15 @@ void FixPrecessionSpin::post_force_respa(int vflag, int ilevel, int /*iloop*/)
 
 void FixPrecessionSpin::set_magneticprecession()
 {
-  if (zeeman_flag) {
-          hx = H_field*nhx;
-          hy = H_field*nhy;
-          hz = H_field*nhz;
+  if (zeeman_flag){
+    hx = H_field * nhx;
+    hy = H_field * nhy;
+    hz = H_field * nhz;
   }
-  if (aniso_flag) {
-          Kax = 2.0*Ka*nax;
-          Kay = 2.0*Ka*nay;
-          Kaz = 2.0*Ka*naz;
+  if (aniso_flag){
+    Kax = 2.0 * Ka * nax;
+    Kay = 2.0 * Ka * nay;
+    Kaz = 2.0 * Ka * naz;
   }
 }
 
@@ -275,7 +275,7 @@ double FixPrecessionSpin::compute_scalar()
   // only sum across procs one time
 
   if (eflag == 0) {
-    MPI_Allreduce(&emag,&emag_all,1,MPI_DOUBLE,MPI_SUM,world);
+    MPI_Allreduce(&emag, &emag_all, 1, MPI_DOUBLE, MPI_SUM, world);
     eflag = 1;
   }
   return emag_all;

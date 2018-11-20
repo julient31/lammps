@@ -18,7 +18,7 @@
    Please cite the related publication:
    Tranchida, J., Plimpton, S. J., Thibaudeau, P., & Thompson, A. P. (2018).
    Massively parallel symplectic algorithm for coupled magnetic spin dynamics
-   and molecular dynamics. Journal of Computational Physics.
+   and molecular dynamics. Journal of Computational Physics, 372, 406-425.
 ------------------------------------------------------------------------- */
 
 #include <cmath>
@@ -91,9 +91,8 @@ void PairSpinNeel::settings(int narg, char **arg)
   // reset cutoffs that have been explicitly set
 
   if (allocated) {
-    int i,j;
-    for (i = 1; i <= atom->ntypes; i++) {
-      for (j = i+1; j <= atom->ntypes; j++) {
+    for (int i = 1; i <= atom->ntypes; i++) {
+      for (int j = i+1; j <= atom->ntypes; j++) {
         if (setflag[i][j]) {
           cut_spin_neel[i][j] = cut_spin_neel_global;
         }
@@ -122,13 +121,13 @@ void PairSpinNeel::coeff(int narg, char **arg)
   force->bounds(FLERR,arg[0],atom->ntypes,ilo,ihi);
   force->bounds(FLERR,arg[1],atom->ntypes,jlo,jhi);
 
-  const double rij = force->numeric(FLERR,arg[3]);
-  const double k1 = force->numeric(FLERR,arg[4]);
-  const double k2 = force->numeric(FLERR,arg[5]);
-  const double k3 = force->numeric(FLERR,arg[6]);
-  const double l1 = force->numeric(FLERR,arg[7]);
-  const double l2 = force->numeric(FLERR,arg[8]);
-  const double l3 = force->numeric(FLERR,arg[9]);
+  const double rij = force->numeric(FLERR, arg[3]);
+  const double k1 = force->numeric(FLERR, arg[4]);
+  const double k2 = force->numeric(FLERR, arg[5]);
+  const double k3 = force->numeric(FLERR, arg[6]);
+  const double l1 = force->numeric(FLERR, arg[7]);
+  const double l2 = force->numeric(FLERR, arg[8]);
+  const double l3 = force->numeric(FLERR, arg[9]);
 
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
@@ -397,7 +396,8 @@ void PairSpinNeel::compute_single_pair(int ii, double fmi[3])
 
 /* ---------------------------------------------------------------------- */
 
-void PairSpinNeel::compute_neel(int i, int j, double rsq, double eij[3], double fmi[3],  double spi[3], double spj[3])
+void PairSpinNeel::compute_neel(int i, int j, double rsq, double eij[3], 
+                                double fmi[3], double spi[3], double spj[3])
 {
   int *type = atom->type;
   int itype, jtype;
@@ -411,47 +411,47 @@ void PairSpinNeel::compute_neel(int i, int j, double rsq, double eij[3], double 
 
   // pseudo-dipolar component
 
-  ra = rsq/g3[itype][jtype]/g3[itype][jtype];
-  gij = 4.0*g1[itype][jtype]*ra;
-  gij *= (1.0-g2[itype][jtype]*ra);
+  ra = rsq / g3[itype][jtype] / g3[itype][jtype];
+  gij = 4.0 * g1[itype][jtype] * ra;
+  gij *= (1.0 - g2[itype][jtype] * ra);
   gij *= exp(-ra);
 
-  double scalar_eij_si = eij[0]*spi[0] + eij[1]*spi[1] + eij[2]*spi[2];
-  double scalar_eij_sj = eij[0]*spj[0] + eij[1]*spj[1] + eij[2]*spj[2];
-  double scalar_si_sj = spi[0]*spj[0] + spi[1]*spj[1] + spi[2]*spj[2];
+  double scalar_eij_si = eij[0] * spi[0] + eij[1] * spi[1] + eij[2] * spi[2];
+  double scalar_eij_sj = eij[0] * spj[0] + eij[1] * spj[1] + eij[2] * spj[2];
+  double scalar_si_sj = spi[0] * spj[0] + spi[1] * spj[1] + spi[2] * spj[2];
 
-  double gij_eij_sj = gij*scalar_eij_sj;
-  double gij_3 = gij/3.0;
-  pdx = gij_eij_sj*eij[0] - gij_3*spj[0];
-  pdy = gij_eij_sj*eij[1] - gij_3*spj[1];
-  pdz = gij_eij_sj*eij[2] - gij_3*spj[2];
+  double gij_eij_sj = gij * scalar_eij_sj;
+  double gij_3 = gij / 3.0;
+  pdx = gij_eij_sj * eij[0] - gij_3 * spj[0];
+  pdy = gij_eij_sj * eij[1] - gij_3 * spj[1];
+  pdz = gij_eij_sj * eij[2] - gij_3 * spj[2];
 
   // pseudo-quadrupolar component
 
-  ra = rsq/q3[itype][jtype]/q3[itype][jtype];
-  q1ij = 4.0*q1[itype][jtype]*ra;
-  q1ij *= (1.0-q2[itype][jtype]*ra);
+  ra = rsq / q3[itype][jtype] / q3[itype][jtype];
+  q1ij = 4.0 * q1[itype][jtype] * ra;
+  q1ij *= (1.0 - q2[itype][jtype] * ra);
   q1ij *= exp(-ra);
-  q2ij = (-2.0*q1ij/9.0);
+  q2ij = (-2.0 * q1ij / 9.0);
 
-  double scalar_eij_si_2 = scalar_eij_si*scalar_eij_si;
-  pq1x = -(scalar_eij_si_2*scalar_eij_si_2 - scalar_si_sj/3.0)*spj[0]/3.0;
-  pq1y = -(scalar_eij_si_2*scalar_eij_si_2 - scalar_si_sj/3.0)*spj[1]/3.0;
-  pq1z = -(scalar_eij_si_2*scalar_eij_si_2 - scalar_si_sj/3.0)*spj[2]/3.0;
+  double scalar_eij_si_2 = scalar_eij_si * scalar_eij_si;
+  pq1x = -(scalar_eij_si_2 * scalar_eij_si_2 - scalar_si_sj / 3.0) * spj[0] / 3.0;
+  pq1y = -(scalar_eij_si_2 * scalar_eij_si_2 - scalar_si_sj / 3.0) * spj[1] / 3.0;
+  pq1z = -(scalar_eij_si_2 * scalar_eij_si_2 - scalar_si_sj / 3.0) * spj[2] / 3.0;
 
-  double pqt1 = (scalar_eij_sj*scalar_eij_sj-scalar_si_sj/3.0);
-  pq1x += pqt1*(2.0*scalar_eij_si*eij[0] - spj[0]/3.0);
-  pq1y += pqt1*(2.0*scalar_eij_si*eij[1] - spj[1]/3.0);
-  pq1z += pqt1*(2.0*scalar_eij_si*eij[2] - spj[2]/3.0);
+  double pqt1 = (scalar_eij_sj * scalar_eij_sj - scalar_si_sj / 3.0);
+  pq1x += pqt1 * (2.0 * scalar_eij_si * eij[0] - spj[0] / 3.0);
+  pq1y += pqt1 * (2.0 * scalar_eij_si * eij[1] - spj[1] / 3.0);
+  pq1z += pqt1 * (2.0 * scalar_eij_si * eij[2] - spj[2] / 3.0);
 
   pq1x *= q1ij;
   pq1y *= q1ij;
   pq1z *= q1ij;
 
-  double scalar_eij_sj_3 = scalar_eij_sj*scalar_eij_sj*scalar_eij_sj;
-  pq2x = 3.0*scalar_eij_si_2*scalar_eij_sj*eij[0] + scalar_eij_sj_3*eij[0];
-  pq2y = 3.0*scalar_eij_si_2*scalar_eij_sj*eij[1] + scalar_eij_sj_3*eij[1];
-  pq2z = 3.0*scalar_eij_si_2*scalar_eij_sj*eij[2] + scalar_eij_sj_3*eij[2];
+  double scalar_eij_sj_3 = scalar_eij_sj * scalar_eij_sj * scalar_eij_sj;
+  pq2x = 3.0 * scalar_eij_si_2 * scalar_eij_sj * eij[0] + scalar_eij_sj_3 * eij[0];
+  pq2y = 3.0 * scalar_eij_si_2 * scalar_eij_sj * eij[1] + scalar_eij_sj_3 * eij[1];
+  pq2z = 3.0 * scalar_eij_si_2 * scalar_eij_sj * eij[2] + scalar_eij_sj_3 * eij[2];
 
   pq2x *= q2ij;
   pq2y *= q2ij;
@@ -466,7 +466,8 @@ void PairSpinNeel::compute_neel(int i, int j, double rsq, double eij[3], double 
 
 /* ---------------------------------------------------------------------- */
 
-void PairSpinNeel::compute_neel_mech(int i, int j, double rsq, double eij[3], double fi[3],  double spi[3], double spj[3])
+void PairSpinNeel::compute_neel_mech(int i, int j, double rsq, double eij[3], 
+                                     double fi[3],  double spi[3], double spj[3])
 {
   int *type = atom->type;
   int itype, jtype;
@@ -483,9 +484,9 @@ void PairSpinNeel::compute_neel_mech(int i, int j, double rsq, double eij[3], do
 
   drij = sqrt(rsq);
 
-  double scalar_si_sj = spi[0]*spj[0]+spi[1]*spj[1]+spi[2]*spj[2];
-  double scalar_eij_si = eij[0]*spi[0]+eij[1]*spi[1]+eij[2]*spi[2];
-  double scalar_eij_sj = eij[0]*spj[0]+eij[1]*spj[1]+eij[2]*spj[2];
+  double scalar_si_sj = spi[0] * spj[0] + spi[1] * spj[1] + spi[2] * spj[2];
+  double scalar_eij_si = eij[0] * spi[0] + eij[1] * spi[1] + eij[2] * spi[2];
+  double scalar_eij_sj = eij[0] * spj[0] + eij[1] * spj[1] + eij[2] * spj[2];
 
   // pseudo-dipolar component
 
@@ -609,20 +610,16 @@ void PairSpinNeel::allocate()
     for (int j = i; j <= n; j++)
       setflag[i][j] = 0;
 
-  memory->create(cut_spin_neel,n+1,n+1,"pair/spin/soc/neel:cut_spin_neel");
-
-  memory->create(g1,n+1,n+1,"pair/spin/soc/neel:g1");
-  memory->create(g1_mech,n+1,n+1,"pair/spin/soc/neel:g1_mech");
-  memory->create(g2,n+1,n+1,"pair/spin/soc/neel:g2");
-  memory->create(g3,n+1,n+1,"pair/spin/soc/neel:g3");
-
-  memory->create(q1,n+1,n+1,"pair/spin/soc/neel:q1");
-  memory->create(q1_mech,n+1,n+1,"pair/spin/soc/neel:q1_mech");
-  memory->create(q2,n+1,n+1,"pair/spin/soc/neel:q2");
-  memory->create(q3,n+1,n+1,"pair/spin/soc/neel:q3");
-
-  memory->create(cutsq,n+1,n+1,"pair/spin/soc/neel:cutsq");
-
+  memory->create(cut_spin_neel, n + 1, n + 1, "pair/spin/soc/neel:cut_spin_neel");
+  memory->create(g1, n + 1, n + 1, "pair/spin/soc/neel:g1");
+  memory->create(g1_mech, n + 1, n + 1, "pair/spin/soc/neel:g1_mech");
+  memory->create(g2, n + 1, n + 1, "pair/spin/soc/neel:g2");
+  memory->create(g3, n + 1, n + 1, "pair/spin/soc/neel:g3");
+  memory->create(q1, n + 1, n + 1, "pair/spin/soc/neel:q1");
+  memory->create(q1_mech, n + 1, n + 1, "pair/spin/soc/neel:q1_mech");
+  memory->create(q2, n + 1, n + 1, "pair/spin/soc/neel:q2");
+  memory->create(q3, n + 1, n + 1, "pair/spin/soc/neel:q3");
+  memory->create(cutsq, n + 1, n + 1, "pair/spin/soc/neel:cutsq");
 }
 
 
@@ -639,15 +636,15 @@ void PairSpinNeel::write_restart(FILE *fp)
     for (j = i; j <= atom->ntypes; j++) {
       fwrite(&setflag[i][j],sizeof(int),1,fp);
       if (setflag[i][j]) {
-        fwrite(&g1[i][j],sizeof(double),1,fp);
-        fwrite(&g1_mech[i][j],sizeof(double),1,fp);
-        fwrite(&g2[i][j],sizeof(double),1,fp);
-        fwrite(&g3[i][j],sizeof(double),1,fp);
-        fwrite(&q1[i][j],sizeof(double),1,fp);
-        fwrite(&q1_mech[i][j],sizeof(double),1,fp);
-        fwrite(&q2[i][j],sizeof(double),1,fp);
-        fwrite(&q3[i][j],sizeof(double),1,fp);
-        fwrite(&cut_spin_neel[i][j],sizeof(double),1,fp);
+        fwrite(&g1[i][j], sizeof(double), 1, fp);
+        fwrite(&g1_mech[i][j], sizeof(double), 1, fp);
+        fwrite(&g2[i][j], sizeof(double), 1, fp);
+        fwrite(&g3[i][j], sizeof(double), 1, fp);
+        fwrite(&q1[i][j], sizeof(double), 1, fp);
+        fwrite(&q1_mech[i][j], sizeof(double), 1, fp);
+        fwrite(&q2[i][j], sizeof(double), 1, fp);
+        fwrite(&q3[i][j], sizeof(double), 1, fp);
+        fwrite(&cut_spin_neel[i][j], sizeof(double), 1, fp);
       }
     }
 }
@@ -670,25 +667,25 @@ void PairSpinNeel::read_restart(FILE *fp)
       MPI_Bcast(&setflag[i][j],1,MPI_INT,0,world);
       if (setflag[i][j]) {
         if (me == 0) {
-          fread(&g1[i][j],sizeof(double),1,fp);
-          fread(&g1_mech[i][j],sizeof(double),1,fp);
-          fread(&g2[i][j],sizeof(double),1,fp);
-          fread(&g2[i][j],sizeof(double),1,fp);
-          fread(&q1[i][j],sizeof(double),1,fp);
-          fread(&q1_mech[i][j],sizeof(double),1,fp);
-          fread(&q2[i][j],sizeof(double),1,fp);
-          fread(&q2[i][j],sizeof(double),1,fp);
-          fread(&cut_spin_neel[i][j],sizeof(double),1,fp);
+          fread(&g1[i][j], sizeof(double), 1, fp);
+          fread(&g1_mech[i][j], sizeof(double), 1, fp);
+          fread(&g2[i][j], sizeof(double), 1, fp);
+          fread(&g2[i][j], sizeof(double), 1, fp);
+          fread(&q1[i][j], sizeof(double), 1, fp);
+          fread(&q1_mech[i][j], sizeof(double), 1, fp);
+          fread(&q2[i][j], sizeof(double), 1, fp);
+          fread(&q2[i][j], sizeof(double), 1, fp);
+          fread(&cut_spin_neel[i][j], sizeof(double), 1, fp);
         }
-        MPI_Bcast(&g1[i][j],1,MPI_DOUBLE,0,world);
-        MPI_Bcast(&g1_mech[i][j],1,MPI_DOUBLE,0,world);
-        MPI_Bcast(&g2[i][j],1,MPI_DOUBLE,0,world);
-        MPI_Bcast(&g3[i][j],1,MPI_DOUBLE,0,world);
-        MPI_Bcast(&q1[i][j],1,MPI_DOUBLE,0,world);
-        MPI_Bcast(&q1_mech[i][j],1,MPI_DOUBLE,0,world);
-        MPI_Bcast(&q2[i][j],1,MPI_DOUBLE,0,world);
-        MPI_Bcast(&q3[i][j],1,MPI_DOUBLE,0,world);
-        MPI_Bcast(&cut_spin_neel[i][j],1,MPI_DOUBLE,0,world);
+        MPI_Bcast(&g1[i][j], 1, MPI_DOUBLE, 0, world);
+        MPI_Bcast(&g1_mech[i][j], 1, MPI_DOUBLE, 0, world);
+        MPI_Bcast(&g2[i][j], 1, MPI_DOUBLE, 0, world);
+        MPI_Bcast(&g3[i][j], 1, MPI_DOUBLE, 0, world);
+        MPI_Bcast(&q1[i][j], 1, MPI_DOUBLE, 0, world);
+        MPI_Bcast(&q1_mech[i][j], 1, MPI_DOUBLE, 0, world);
+        MPI_Bcast(&q2[i][j], 1, MPI_DOUBLE, 0, world);
+        MPI_Bcast(&q3[i][j], 1, MPI_DOUBLE, 0, world);
+        MPI_Bcast(&cut_spin_neel[i][j], 1, MPI_DOUBLE, 0, world);
       }
     }
   }
@@ -700,9 +697,9 @@ void PairSpinNeel::read_restart(FILE *fp)
 
 void PairSpinNeel::write_restart_settings(FILE *fp)
 {
-  fwrite(&cut_spin_neel_global,sizeof(double),1,fp);
-  fwrite(&offset_flag,sizeof(int),1,fp);
-  fwrite(&mix_flag,sizeof(int),1,fp);
+  fwrite(&cut_spin_neel_global, sizeof(double), 1, fp);
+  fwrite(&offset_flag, sizeof(int), 1, fp);
+  fwrite(&mix_flag, sizeof(int), 1, fp);
 }
 
 /* ----------------------------------------------------------------------
@@ -712,11 +709,11 @@ void PairSpinNeel::write_restart_settings(FILE *fp)
 void PairSpinNeel::read_restart_settings(FILE *fp)
 {
   if (comm->me == 0) {
-    fread(&cut_spin_neel_global,sizeof(double),1,fp);
-    fread(&offset_flag,sizeof(int),1,fp);
-    fread(&mix_flag,sizeof(int),1,fp);
+    fread(&cut_spin_neel_global, sizeof(double), 1, fp);
+    fread(&offset_flag, sizeof(int), 1, fp);
+    fread(&mix_flag, sizeof(int), 1, fp);
   }
-  MPI_Bcast(&cut_spin_neel_global,1,MPI_DOUBLE,0,world);
-  MPI_Bcast(&offset_flag,1,MPI_INT,0,world);
-  MPI_Bcast(&mix_flag,1,MPI_INT,0,world);
+  MPI_Bcast(&cut_spin_neel_global, 1, MPI_DOUBLE, 0, world);
+  MPI_Bcast(&offset_flag, 1, MPI_INT, 0, world);
+  MPI_Bcast(&mix_flag, 1, MPI_INT, 0, world);
 }

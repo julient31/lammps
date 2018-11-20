@@ -20,7 +20,7 @@
    Please cite the related publication:
    Tranchida, J., Plimpton, S. J., Thibaudeau, P., & Thompson, A. P. (2018).
    Massively parallel symplectic algorithm for coupled magnetic spin dynamics
-   and molecular dynamics. Journal of Computational Physics.
+   and molecular dynamics. Journal of Computational Physics, 372, 406-425.
 ------------------------------------------------------------------------- */
 
 #include <cmath>
@@ -73,21 +73,21 @@ void AtomVecSpin::grow(int n)
   if (nmax < 0 || nmax > MAXSMALLINT)
     error->one(FLERR,"Per-processor system is too big");
 
-  tag = memory->grow(atom->tag,nmax,"atom:tag");
-  type = memory->grow(atom->type,nmax,"atom:type");
-  mask = memory->grow(atom->mask,nmax,"atom:mask");
-  image = memory->grow(atom->image,nmax,"atom:image");
+  tag = memory->grow(atom->tag, nmax, "atom:tag");
+  type = memory->grow(atom->type, nmax, "atom:type");
+  mask = memory->grow(atom->mask, nmax, "atom:mask");
+  image = memory->grow(atom->image, nmax, "atom:image");
 
   // allocating mech. quantities
 
-  x = memory->grow(atom->x,nmax,3,"atom:x");
-  v = memory->grow(atom->v,nmax,3,"atom:v");
-  f = memory->grow(atom->f,nmax*comm->nthreads,3,"atom:f");
+  x = memory->grow(atom->x, nmax, 3, "atom:x");
+  v = memory->grow(atom->v, nmax, 3, "atom:v");
+  f = memory->grow(atom->f, nmax * comm->nthreads, 3, "atom:f");
 
   // allocating mag. quantities
 
-  sp = memory->grow(atom->sp,nmax,4,"atom:sp");
-  fm = memory->grow(atom->fm,nmax*comm->nthreads,3,"atom:fm");
+  sp = memory->grow(atom->sp, nmax, 4, "atom:sp");
+  fm = memory->grow(atom->fm, nmax * comm->nthreads, 3, "atom:fm");
 
   if (atom->nextra_grow)
     for (int iextra = 0; iextra < atom->nextra_grow; iextra++)
@@ -100,10 +100,15 @@ void AtomVecSpin::grow(int n)
 
 void AtomVecSpin::grow_reset()
 {
-  tag = atom->tag; type = atom->type;
-  mask = atom->mask; image = atom->image;
-  x = atom->x; v = atom->v; f = atom->f;
-  sp = atom->sp; fm = atom->fm;
+  tag = atom->tag;
+  type = atom->type;
+  mask = atom->mask;
+  image = atom->image;
+  x = atom->x;
+  v = atom->v;
+  f = atom->f;
+  sp = atom->sp;
+  fm = atom->fm;
 }
 
 
@@ -131,13 +136,13 @@ void AtomVecSpin::copy(int i, int j, int delflag)
 
   if (atom->nextra_grow)
     for (int iextra = 0; iextra < atom->nextra_grow; iextra++)
-      modify->fix[atom->extra_grow[iextra]]->copy_arrays(i,j,delflag);
+      modify->fix[atom->extra_grow[iextra]]->copy_arrays(i, j, delflag);
 }
 
 /* ---------------------------------------------------------------------- */
 
 int AtomVecSpin::pack_comm(int n, int *list, double *buf,
-                             int pbc_flag, int *pbc)
+                           int pbc_flag, int *pbc)
 {
   int i,j,m;
   double dx,dy,dz;
@@ -160,9 +165,9 @@ int AtomVecSpin::pack_comm(int n, int *list, double *buf,
       dy = pbc[1]*domain->yprd;
       dz = pbc[2]*domain->zprd;
     } else {
-      dx = pbc[0]*domain->xprd + pbc[5]*domain->xy + pbc[4]*domain->xz;
-      dy = pbc[1]*domain->yprd + pbc[3]*domain->yz;
-      dz = pbc[2]*domain->zprd;
+      dx = pbc[0] * domain->xprd + pbc[5] * domain->xy + pbc[4] * domain->xz;
+      dy = pbc[1] * domain->yprd + pbc[3] * domain->yz;
+      dz = pbc[2] * domain->zprd;
     }
     for (i = 0; i < n; i++) {
       j = list[i];
@@ -207,9 +212,9 @@ int AtomVecSpin::pack_comm_vel(int n, int *list, double *buf,
       dy = pbc[1]*domain->yprd;
       dz = pbc[2]*domain->zprd;
     } else {
-      dx = pbc[0]*domain->xprd + pbc[5]*domain->xy + pbc[4]*domain->xz;
-      dy = pbc[1]*domain->yprd + pbc[3]*domain->yz;
-      dz = pbc[2]*domain->zprd;
+      dx = pbc[0] * domain->xprd + pbc[5] * domain->xy + pbc[4] * domain->xz;
+      dy = pbc[1] * domain->yprd + pbc[3] * domain->yz;
+      dz = pbc[2] * domain->zprd;
     }
     if (!deform_vremap) {
       for (i = 0; i < n; i++) {
@@ -226,9 +231,9 @@ int AtomVecSpin::pack_comm_vel(int n, int *list, double *buf,
         buf[m++] = v[j][2];
       }
     } else {
-      dvx = pbc[0]*h_rate[0] + pbc[5]*h_rate[5] + pbc[4]*h_rate[4];
-      dvy = pbc[1]*h_rate[1] + pbc[3]*h_rate[3];
-      dvz = pbc[2]*h_rate[2];
+      dvx = pbc[0] * h_rate[0] + pbc[5] * h_rate[5] + pbc[4] * h_rate[4];
+      dvy = pbc[1] * h_rate[1] + pbc[3] * h_rate[3];
+      dvz = pbc[2] * h_rate[2];
       for (i = 0; i < n; i++) {
         j = list[i];
         buf[m++] = x[j][0] + dx;
@@ -257,11 +262,9 @@ int AtomVecSpin::pack_comm_vel(int n, int *list, double *buf,
 
 int AtomVecSpin::pack_comm_hybrid(int n, int *list, double *buf)
 {
-  int i,j,m;
-
-  m = 0;
-  for (i = 0; i < n; i++) {
-    j = list[i];
+  int m = 0;
+  for (int i = 0; i < n; i++) {
+    int j = list[i];
     buf[m++] = sp[j][0];
     buf[m++] = sp[j][1];
     buf[m++] = sp[j][2];
@@ -782,8 +785,8 @@ void AtomVecSpin::create_atom(int itype, double *coord)
   x[nlocal][1] = coord[1];
   x[nlocal][2] = coord[2];
   mask[nlocal] = 1;
-  image[nlocal] = ((imageint) IMGMAX << IMG2BITS) |
-    ((imageint) IMGMAX << IMGBITS) | IMGMAX;
+  image[nlocal] = ((imageint)IMGMAX << IMG2BITS) |
+                  ((imageint)IMGMAX << IMGBITS) | IMGMAX;
   v[nlocal][0] = 0.0;
   v[nlocal][1] = 0.0;
   v[nlocal][2] = 0.0;
@@ -809,7 +812,7 @@ void AtomVecSpin::data_atom(double *coord, imageint imagetmp, char **values)
   tag[nlocal] = ATOTAGINT(values[0]);
   type[nlocal] = atoi(values[1]);
   if (type[nlocal] <= 0 || type[nlocal] > atom->ntypes)
-    error->one(FLERR,"Invalid atom type in Atoms section of data file");
+    error->one(FLERR, "Invalid atom type in Atoms section of data file");
 
   x[nlocal][0] = coord[0];
   x[nlocal][1] = coord[1];
@@ -917,7 +920,8 @@ void AtomVecSpin::write_data(FILE *fp, int n, double **buf)
 
 int AtomVecSpin::write_data_hybrid(FILE *fp, double *buf)
 {
-  fprintf(fp," %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e",buf[0],buf[1],buf[2],buf[3],buf[4]);
+  fprintf(fp, " %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e",
+          buf[0], buf[1], buf[2], buf[3], buf[4]);
   return 4;
 }
 
@@ -945,8 +949,6 @@ bigint AtomVecSpin::memory_usage()
 
 void AtomVecSpin::force_clear(int /*n*/, size_t nbytes)
 {
-  memset(&atom->f[0][0],0,3*nbytes);
-  memset(&atom->fm[0][0],0,3*nbytes);
+  memset(&atom->f[0][0], 0, 3 * nbytes);
+  memset(&atom->fm[0][0], 0, 3 * nbytes);
 }
-
-
