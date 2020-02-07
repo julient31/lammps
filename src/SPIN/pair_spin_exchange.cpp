@@ -347,10 +347,20 @@ void PairSpinExchange::compute_exchange(int i, int j, double rsq, double fmi[3],
   itype = type[i];
   jtype = type[j];
 
+  // expression 1
   ra = rsq/J3[itype][jtype]/J3[itype][jtype];
   Jex = 4.0*J1_mag[itype][jtype]*ra;
   Jex *= (1.0-J2[itype][jtype]*ra);
   Jex *= exp(-ra);
+
+  // printf("Jex=%g \n",Jex);
+
+  // expression 2
+  // ra = rsq/J3[itype][jtype]/J3[itype][jtype];
+  // Jex = 4.0*J1_mag[itype][jtype]*ra;
+  // double rij = sqrt(rsq);
+  // Jex *= cos(J2[itype][jtype]*rij);
+  // Jex *= exp(-ra);
 
   fmi[0] += Jex*spj[0];
   fmi[1] += Jex*spj[1];
@@ -376,13 +386,24 @@ void PairSpinExchange::compute_exchange_mech(int i, int j, double rsq, double ei
   ra = rsq*iJ3;
   rr = sqrt(rsq)*iJ3;
 
+  // expression 1
+  // Jex_mech = (1.0-J2[itype][jtype]*ra)*(1.0-ra)-J2[itype][jtype]*ra; 
   Jex_mech = 1.0-ra-J2[itype][jtype]*ra*(2.0-ra);
   Jex_mech *= 8.0*Jex*rr*exp(-ra);
   Jex_mech *= (spi[0]*spj[0]+spi[1]*spj[1]+spi[2]*spj[2]);
 
+  // expression 2
+  // double gammar = sqrt(rsq)*J2[itype][jtype];
+  // Jex_mech =  2.0*rr*cos(gammar)*(1.0-ra) - J2[itype][jtype]*ra*sin(gammar);
+  // Jex_mech *= 4.0*Jex*exp(-ra);
+  // Jex_mech *= (spi[0]*spj[0]+spi[1]*spj[1]+spi[2]*spj[2]);
+
   fi[0] -= Jex_mech*eij[0];
   fi[1] -= Jex_mech*eij[1];
   fi[2] -= Jex_mech*eij[2];
+  // fi[0] += Jex_mech*eij[0];
+  // fi[1] += Jex_mech*eij[1];
+  // fi[2] += Jex_mech*eij[2];
 }
 
 /* ----------------------------------------------------------------------

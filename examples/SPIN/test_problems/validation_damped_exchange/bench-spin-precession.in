@@ -5,13 +5,18 @@ atom_style      spin
 atom_modify     map array
 boundary        f f f 
 
-read_data	two_spins.data
+# setting mass, mag. moments
+lattice 	sc 3.0
+region 		box block 0.0 2.0 0.0 1.0 0.0 1.0
+create_box 	1 box
+create_atoms 	1 box
+mass		1 55.845
+set             atom 1 spin 1.0 1.0 0.0 0.0
+set             atom 2 spin 1.0 0.0 1.0 0.0
 
 pair_style      spin/exchange 3.1
 pair_coeff	* * exchange 3.1 11.254 0.0 1.0
 
-group bead      type 1  
- 
 variable        H equal 0.0
 variable        Kan equal 0.0
 variable        Temperature equal 0.0 

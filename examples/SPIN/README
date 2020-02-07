@@ -1,3 +1,4 @@
+=====================================================================
 This directory contains examples and applications of the SPIN package
 =====================================================================
 
@@ -18,7 +19,9 @@ This directory contains examples and applications of the SPIN package
 - vizualization of the dump files can be achieved using Ovito or 
   VMD. See the vmd repository for help vizualizing results with VMD. 
 
+- the spinmin directory describes 
+
 ** Note, the aim of this repository is mainly to provide users with
-examples. Better values and tuning of the magnetic and mechanical 
-interactions can (have to...) be achieved for more accurate materials 
-simulations. **
+simple examples. Better values and tuning of the magnetic and 
+mechanical interactions can (have to ...) be achieved for more accurate 
+materials simulations. **
