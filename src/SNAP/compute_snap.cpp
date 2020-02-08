@@ -10,19 +10,7 @@
 
    See the README file in the top-level LAMMPS directory.
 ------------------------------------------------------------------------- */
-/* IDEAS
 
--DONE: Need to define a local peratom array for snad and snad on local and ghost atoms
--DONE: Reverse communicate local peratom array
--DONE: Copy peratom array into output array
--DONE: size_array_cols = nperdim (ncoeff [+quadratic])
--DONE: size_array_rows = 1 + total number of atoms + 6
--DONE: size_peratom = (3+6)*nperdim*ntypes
-INCOMPLETE: Mappy from local to global
-INCOMPLETE: modify->find_compute() 
-DONE: eliminate local peratom array for viral, replace with fdotr 
-
- */
 #include "compute_snap.h"
 #include <cstring>
 #include <cstdlib>
@@ -191,7 +179,7 @@ void ComputeSnap::init()
                  "snap:snapall");
   array = snapall;
 
-  // INCOMPLETE: modify->find_compute() 
+  // INCOMPLETE: modify->find_compute()
   // was called 223960 times by snappy Ta example
   // that is over 600 times per config?
   // how is this possible???
@@ -397,21 +385,22 @@ void ComputeSnap::compute_array()
       }
 
       // Accumulate Bi
-      
+
       // linear contributions
 
+      int k = typeoffset_global;
       for (int icoeff = 0; icoeff < ncoeff; icoeff++)
-        snap[0][icoeff+typeoffset_global] += snaptr->blist[icoeff];
+        snap[0][k++] += snaptr->blist[icoeff];
 
       // quadratic contributions
 
       if (quadraticflag) {
         for (int icoeff = 0; icoeff < ncoeff; icoeff++) {
           double bveci = snaptr->blist[icoeff];
-          snap[0][icoeff+typeoffset_global] += 0.5*bveci*bveci;
+          snap[0][k++] += 0.5*bveci*bveci;
           for (int jcoeff = icoeff+1; jcoeff < ncoeff; jcoeff++) {
             double bvecj = snaptr->blist[jcoeff];
-            snap[0][icoeff+typeoffset_global] += bveci*bvecj;
+            snap[0][k++] += bveci*bvecj;
           }
         }
       }
@@ -458,24 +447,24 @@ void ComputeSnap::compute_array()
 
   int irow = 0;
   double reference_energy = c_pe->compute_scalar();
-  snapall[irow++][lastcol] = reference_energy; 
+  snapall[irow++][lastcol] = reference_energy;
 
   // assign virial stress to last column
   // switch to Voigt notation
 
   c_virial->compute_vector();
   irow += 3*natoms;
-  snapall[irow++][lastcol] = c_virial->vector[0]; 
-  snapall[irow++][lastcol] = c_virial->vector[1]; 
-  snapall[irow++][lastcol] = c_virial->vector[2]; 
-  snapall[irow++][lastcol] = c_virial->vector[5]; 
-  snapall[irow++][lastcol] = c_virial->vector[4]; 
-  snapall[irow++][lastcol] = c_virial->vector[3]; 
+  snapall[irow++][lastcol] = c_virial->vector[0];
+  snapall[irow++][lastcol] = c_virial->vector[1];
+  snapall[irow++][lastcol] = c_virial->vector[2];
+  snapall[irow++][lastcol] = c_virial->vector[5];
+  snapall[irow++][lastcol] = c_virial->vector[4];
+  snapall[irow++][lastcol] = c_virial->vector[3];
 
 }
 
 /* ----------------------------------------------------------------------
-   compute global virial contributions via summing r_i.dB^j/dr_i over 
+   compute global virial contributions via summing r_i.dB^j/dr_i over
    own & ghost atoms
 ------------------------------------------------------------------------- */
 
@@ -515,9 +504,9 @@ void ComputeSnap::dbdotr_compute()
 double ComputeSnap::memory_usage()
 {
 
-  double bytes = size_array_rows*size_array_cols * 
+  double bytes = size_array_rows*size_array_cols *
     sizeof(double);                                     // snap
-  bytes += size_array_rows*size_array_cols * 
+  bytes += size_array_rows*size_array_cols *
     sizeof(double);                                     // snapall
   bytes += nmax*size_peratom * sizeof(double);          // snap_peratom
   bytes += snaptr->memory_usage();                      // SNA object
