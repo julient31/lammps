@@ -64,6 +64,7 @@ PairSpinDipoleCut::~PairSpinDipoleCut()
     memory->destroy(setflag);
     memory->destroy(cut_spin_long);
     memory->destroy(cutsq);
+    memory->destroy(emag);
   }
 }
 
@@ -185,6 +186,13 @@ void PairSpinDipoleCut::compute(int eflag, int vflag)
   numneigh = list->numneigh;
   firstneigh = list->firstneigh;
 
+  // checking size of emag
+  
+  if (nlocal_max < nlocal) {                    // grow emag lists if necessary
+    nlocal_max = nlocal;
+    memory->grow(emag,nlocal_max,"pair/spin:emag");
+  }
+
   // computation of the exchange interaction
   // loop over atoms and their neighbors
 
@@ -199,6 +207,7 @@ void PairSpinDipoleCut::compute(int eflag, int vflag)
     spi[1] = sp[i][1];
     spi[2] = sp[i][2];
     spi[3] = sp[i][3];
+    emag[i] = 0.0;
     itype = type[i];
 
     for (jj = 0; jj < jnum; jj++) {
@@ -252,7 +261,9 @@ void PairSpinDipoleCut::compute(int eflag, int vflag)
       if (eflag) {
         if (rsq <= local_cut2) {
           evdwl -= (spi[0]*fmi[0] + spi[1]*fmi[1] + spi[2]*fmi[2]);
-          evdwl *= 0.5*hbar;
+          // evdwl *= 0.5*hbar;
+          evdwl *= hbar;
+          emag[i] += evdwl;
         }
       } else evdwl = 0.0;
 

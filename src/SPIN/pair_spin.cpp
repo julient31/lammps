@@ -29,6 +29,7 @@
 #include "fix.h"
 #include "force.h"
 #include "math_const.h"
+#include "memory.h"
 #include "modify.h"
 #include "neighbor.h"
 #include "neigh_request.h"
@@ -41,7 +42,7 @@ using namespace MathConst;
 
 /* ---------------------------------------------------------------------- */
 
-PairSpin::PairSpin(LAMMPS *lmp) : Pair(lmp)
+PairSpin::PairSpin(LAMMPS *lmp) : Pair(lmp), emag(NULL)
 {
   hbar = force->hplanck/MY_2PI;
   single_enable = 0;
@@ -98,4 +99,8 @@ void PairSpin::init_style()
   if (ifix >=0)
     lattice_flag = ((FixNVESpin *) modify->fix[ifix])->lattice_flag;
 
+  // init. size of energy stacking lists
+
+  nlocal_max = atom->nlocal;
+  memory->grow(emag,nlocal_max,"pair/spin:emag");
 }
