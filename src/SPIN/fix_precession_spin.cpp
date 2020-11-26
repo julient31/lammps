@@ -509,26 +509,29 @@ double FixPrecessionSpin::compute_cubic_energy(double spi[3])
 
 void FixPrecessionSpin::compute_hexaniso(double spi[3], double fmi[3])
 {
-    double s_x,s_y,s_z;
-    double pf, phi, ssint2;
+  double s_x,s_y,s_z;
+  double pf, phi, ssint2;
 
-    /* changing to the axes' frame */
-    s_x = l6x*spi[0]+l6y*spi[1]+l6z*spi[2];
-    s_y = m6x*spi[0]+m6y*spi[1]+m6z*spi[2];
-    s_z = n6x*spi[0]+n6y*spi[1]+n6z*spi[2];
+  // changing to the axes' frame
+  
+  s_x = l6x*spi[0]+l6y*spi[1]+l6z*spi[2];
+  s_y = m6x*spi[0]+m6y*spi[1]+m6z*spi[2];
+  s_z = n6x*spi[0]+n6y*spi[1]+n6z*spi[2];
 
-    /* hexagonal anisotropy in the axes' frame */
-    phi = atan2(s_y,s_x);
-    ssint2 = s_x*s_x + s_y*s_y; // s^2sin^2(theta)
-    pf = 6* K6h * ssint2*ssint2*sqrt(ssint2); // 6*K_6*s^5*sin^5(theta)
-    double fm_x =  pf*cos(5*phi);
-    double fm_y = -pf*sin(5*phi);
-    double fm_z =  0;
+  // hexagonal anisotropy in the axes' frame
 
-    /* back to the lab's frame */
-    fmi[0] += fm_x*l6x+fm_y*m6x+fm_z*n6x;
-    fmi[1] += fm_x*l6y+fm_y*m6y+fm_z*n6y;
-    fmi[2] += fm_x*l6z+fm_y*m6z+fm_z*n6z;
+  phi = atan2(s_y,s_x);
+  ssint2 = s_x*s_x + s_y*s_y;                 // s^2sin^2(theta)
+  pf = 6* K6h * ssint2*ssint2*sqrt(ssint2);   // 6*K_6*s^5*sin^5(theta)
+  double fm_x =  pf*cos(5*phi);
+  double fm_y = -pf*sin(5*phi);
+  double fm_z =  0;
+
+  // back to the lab's frame
+
+  fmi[0] += fm_x*l6x+fm_y*m6x+fm_z*n6x;
+  fmi[1] += fm_x*l6y+fm_y*m6y+fm_z*n6y;
+  fmi[2] += fm_x*l6z+fm_y*m6z+fm_z*n6z;
 }
 
 /* ----------------------------------------------------------------------
@@ -540,12 +543,14 @@ double FixPrecessionSpin::compute_hexaniso_energy(double spi[3])
   double energy = 0.0;
   double s_x,s_y,s_z, phi,ssint2;
 
-  /* changing to the axes' frame */
+  // changing to the axes' frame
+
   s_x = l6x*spi[0]+l6y*spi[1]+l6z*spi[2];
   s_y = m6x*spi[0]+m6y*spi[1]+m6z*spi[2];
   s_z = n6x*spi[0]+n6y*spi[1]+n6z*spi[2];
 
-  /* hexagonal anisotropy in the axes' frame */
+  // hexagonal anisotropy in the axes' frame
+  
   phi = atan2(s_y,s_z);
   ssint2 = s_x*s_x + s_y*s_y;
 
