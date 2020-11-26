@@ -204,6 +204,8 @@
 /pair_spin_dipole_long.h
 /pair_spin_exchange.cpp
 /pair_spin_exchange.h
+/pair_spin_exchange_biquadratic.cpp
+/pair_spin_exchange_biquadratic.h
 /pair_spin_magelec.cpp
 /pair_spin_magelec.h
 /pair_spin_neel.cpp
