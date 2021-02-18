@@ -12,7 +12,7 @@ Syntax
 
 * ID, group are documented in :doc:`fix <fix>` command
 * precession/spin = style name of this fix command
-* style = *zeeman* or *anisotropy* or *cubic*
+* style = *zeeman* or *stt* or *anisotropy* or *cubic* or *hexagonal*
 
   .. parsed-literal::
 
