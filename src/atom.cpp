@@ -40,6 +40,10 @@
 #include "neigh_request.h"
 #endif
 
+#ifdef LMP_GPU
+#include "fix_gpu.h"
+#endif
+
 using namespace LAMMPS_NS;
 using namespace MathConst;
 
@@ -1126,9 +1130,9 @@ void Atom::data_atoms(int n, char *buf, tagint id_offset, tagint mol_offset,
       imz = utils::inumeric(FLERR,values[iptr+2],false,lmp);
       if ((domain->dimension == 2) && (imz != 0))
         error->all(FLERR,"Z-direction image flag must be 0 for 2d-systems");
-      if ((!domain->xperiodic) && (imx != 0)) flagx = 1;
-      if ((!domain->yperiodic) && (imy != 0)) flagy = 1;
-      if ((!domain->zperiodic) && (imz != 0)) flagz = 1;
+      if ((!domain->xperiodic) && (imx != 0)) { flagx = 1; imx = 0; }
+      if ((!domain->yperiodic) && (imy != 0)) { flagy = 1; imy = 0; }
+      if ((!domain->zperiodic) && (imz != 0)) { flagz = 1; imz = 0; }
     }
     imagedata = ((imageint) (imx + IMGMAX) & IMGMASK) |
         (((imageint) (imy + IMGMAX) & IMGMASK) << IMGBITS) |
@@ -1171,11 +1175,14 @@ void Atom::data_atoms(int n, char *buf, tagint id_offset, tagint mol_offset,
 
   if (comm->me == 0) {
     if (flagx)
-      error->warning(FLERR,"Non-zero imageflag(s) in x direction for non-periodic boundary");
+      error->warning(FLERR,"Non-zero imageflag(s) in x direction for "
+                           "non-periodic boundary reset to zero");
     if (flagy)
-      error->warning(FLERR,"Non-zero imageflag(s) in y direction for non-periodic boundary");
+      error->warning(FLERR,"Non-zero imageflag(s) in y direction for "
+                           "non-periodic boundary reset to zero");
     if (flagz)
-      error->warning(FLERR,"Non-zero imageflag(s) in z direction for non-periodic boundary");
+      error->warning(FLERR,"Non-zero imageflag(s) in z direction for "
+                           "non-periodic boundary reset to zero");
   }
 
   delete [] values;
@@ -1881,7 +1888,7 @@ void Atom::add_molecule(int narg, char **arg)
 
 int Atom::find_molecule(char *id)
 {
-  if(id == nullptr) return -1;
+  if (id == nullptr) return -1;
   int imol;
   for (imol = 0; imol < nmolecule; imol++)
     if (strcmp(id,molecules[imol]->id) == 0) return imol;
@@ -2146,7 +2153,7 @@ void Atom::setup_sort_bins()
   bininvy = nbiny / (bboxhi[1]-bboxlo[1]);
   bininvz = nbinz / (bboxhi[2]-bboxlo[2]);
 
-  #ifdef LMP_USER_INTEL
+#ifdef LMP_USER_INTEL
   int intel_neigh = 0;
   if (neighbor->nrequest) {
     if (neighbor->requests[0]->intel) intel_neigh = 1;
@@ -2191,7 +2198,36 @@ void Atom::setup_sort_bins()
     bboxhi[1] = bboxlo[1] + static_cast<double>(nbiny) / bininvy;
     bboxhi[2] = bboxlo[2] + static_cast<double>(nbinz) / bininvz;
   }
-  #endif
+#endif
+
+#ifdef LMP_GPU
+  if (userbinsize == 0.0) {
+    int ifix = modify->find_fix("package_gpu");
+    if (ifix >= 0) {
+      const double subx = domain->subhi[0] - domain->sublo[0];
+      const double suby = domain->subhi[1] - domain->sublo[1];
+      const double subz = domain->subhi[2] - domain->sublo[2];
+
+      FixGPU *fix = static_cast<FixGPU *>(modify->fix[ifix]);
+      binsize = fix->binsize(subx, suby, subz, atom->nlocal,
+                             neighbor->cutneighmax);
+      bininv = 1.0 / binsize;
+
+      nbinx = static_cast<int> (ceil(subx * bininv));
+      nbiny = static_cast<int> (ceil(suby * bininv));
+      nbinz = static_cast<int> (ceil(subz * bininv));
+      if (domain->dimension == 2) nbinz = 1;
+
+      if (nbinx == 0) nbinx = 1;
+      if (nbiny == 0) nbiny = 1;
+      if (nbinz == 0) nbinz = 1;
+
+      bininvx = bininv;
+      bininvy = bininv;
+      bininvz = bininv;
+    }
+  }
+#endif
 
   if (1.0*nbinx*nbiny*nbinz > INT_MAX)
     error->one(FLERR,"Too many atom sorting bins");
@@ -2327,7 +2363,7 @@ void Atom::update_callback(int ifix)
 
 int Atom::find_custom(const char *name, int &flag)
 {
-  if(name == nullptr) return -1;
+  if (name == nullptr) return -1;
 
   for (int i = 0; i < nivector; i++)
     if (iname[i] && strcmp(iname[i],name) == 0) {
@@ -2697,12 +2733,12 @@ double Atom::memory_usage()
 {
   double bytes = avec->memory_usage();
 
-  bytes += max_same*sizeof(int);
+  bytes += (double)max_same*sizeof(int);
   if (map_style == MAP_ARRAY)
     bytes += memory->usage(map_array,map_maxarray);
   else if (map_style == MAP_HASH) {
-    bytes += map_nbucket*sizeof(int);
-    bytes += map_nhash*sizeof(HashElem);
+    bytes += (double)map_nbucket*sizeof(int);
+    bytes += (double)map_nhash*sizeof(HashElem);
   }
   if (maxnext) {
     bytes += memory->usage(next,maxnext);

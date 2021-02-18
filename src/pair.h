@@ -35,7 +35,7 @@ class Pair : protected Pointers {
   static int instance_total;     // # of Pair classes ever instantiated
 
   double eng_vdwl,eng_coul;      // accumulated energies
-  double virial[6];              // accumulated virial
+  double virial[6];              // accumulated virial: xx,yy,zz,xy,xz,yz
   double *eatom,**vatom;         // accumulated per-atom energy/virial
   double **cvatom;               // accumulated per-atom centroid virial
 
@@ -115,6 +115,7 @@ class Pair : protected Pointers {
 
   ExecutionSpace execution_space;
   unsigned int datamask_read,datamask_modify;
+  int kokkosable; // 1 if Kokkos pair
 
   Pair(class LAMMPS *);
   virtual ~Pair();

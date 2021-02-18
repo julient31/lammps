@@ -841,6 +841,10 @@ not recognized, the function returns -1.
        See :doc:`create_box`.
    * - nthreads
      - Number of requested OpenMP threads for LAMMPS' execution
+   * - newton_bond
+     - 1 if Newton's 3rd law is applied to bonded interactions, 0 if not.
+   * - newton_pair
+     - 1 if Newton's 3rd law is applied to non-bonded interactions, 0 if not.
    * - triclinic
      - 1 if the the simulation box is triclinic, 0 if orthogonal.
        See :doc:`change_box`.
@@ -933,6 +937,8 @@ int lammps_extract_setting(void *handle, const char *keyword)
 
   if (strcmp(keyword,"dimension") == 0) return lmp->domain->dimension;
   if (strcmp(keyword,"box_exist") == 0) return lmp->domain->box_exist;
+  if (strcmp(keyword,"newton_bond") == 0) return lmp->force->newton_bond;
+  if (strcmp(keyword,"newton_pair") == 0) return lmp->force->newton_pair;
   if (strcmp(keyword,"triclinic") == 0) return lmp->domain->triclinic;
 
   if (strcmp(keyword,"universe_rank") == 0) return lmp->universe->me;
@@ -2438,7 +2444,7 @@ void lammps_scatter_atoms(void *handle, char *name, int type, int count, void *d
     int natoms = static_cast<int> (lmp->atom->natoms);
 
     void *vptr = lmp->atom->extract(name);
-    if(vptr == nullptr) {
+    if (vptr == nullptr) {
       if (lmp->comm->me == 0)
         lmp->error->warning(FLERR,
                             "lammps_scatter_atoms: unknown property name");
@@ -2555,7 +2561,7 @@ void lammps_scatter_atoms_subset(void *handle, char *name, int type, int count,
     }
 
     void *vptr = lmp->atom->extract(name);
-    if(vptr == nullptr) {
+    if (vptr == nullptr) {
       if (lmp->comm->me == 0)
         lmp->error->warning(FLERR,
                             "lammps_scatter_atoms_subset: unknown property name");
@@ -2687,7 +2693,7 @@ void lammps_gather(void *handle, char *name, int type, int count, void *data)
 
     void *vptr = lmp->atom->extract(name);
 
-    if (vptr==nullptr && strstr(name,"f_") == name) { // fix
+    if (vptr==nullptr && utils::strmatch(name,"^f_")) { // fix
 
       fcid = lmp->modify->find_fix(&name[2]);
       if (fcid < 0) {
@@ -2716,11 +2722,11 @@ void lammps_gather(void *handle, char *name, int type, int count, void *data)
         return;
       }
 
-      if(count==1) vptr = (void *) lmp->modify->fix[fcid]->vector_atom;
+      if (count==1) vptr = (void *) lmp->modify->fix[fcid]->vector_atom;
       else vptr = (void *) lmp->modify->fix[fcid]->array_atom;
     }
 
-    if (vptr==nullptr && strstr(name,"c_") == name) { // compute
+    if (vptr==nullptr && utils::strmatch(name,"^c_")) { // compute
 
       fcid = lmp->modify->find_compute(&name[2]);
       if (fcid < 0) {
@@ -2745,14 +2751,15 @@ void lammps_gather(void *handle, char *name, int type, int count, void *data)
       if (lmp->modify->compute[fcid]->invoked_peratom != lmp->update->ntimestep)
         lmp->modify->compute[fcid]->compute_peratom();
 
-      if(count==1) vptr = (void *) lmp->modify->compute[fcid]->vector_atom;
+      if (count==1) vptr = (void *) lmp->modify->compute[fcid]->vector_atom;
       else vptr = (void *) lmp->modify->compute[fcid]->array_atom;
 
 
     }
+
     // property / atom
-    if ( (vptr == nullptr) && ((strstr(name,"d_") == name)
-                               || (strstr(name,"i_") == name)) ) {
+
+    if ((vptr == nullptr) && (utils::strmatch(name,"^[di]_"))) {
       fcid = lmp->atom->find_custom(&name[2], ltype);
       if (fcid < 0) {
         if (lmp->comm->me == 0)
@@ -2769,7 +2776,7 @@ void lammps_gather(void *handle, char *name, int type, int count, void *data)
           lmp->error->warning(FLERR,"lammps_gather: property/atom has count=1");
         return;
       }
-      if(ltype==0) vptr = (void *) lmp->atom->ivector[fcid];
+      if (ltype==0) vptr = (void *) lmp->atom->ivector[fcid];
       else vptr = (void *) lmp->atom->dvector[fcid];
     }
 
@@ -2906,7 +2913,7 @@ void lammps_gather_concat(void *handle, char *name, int type, int count, void *d
 
     void *vptr = lmp->atom->extract(name);
 
-    if (vptr==nullptr && strstr(name,"f_") == name) { // fix
+    if (vptr==nullptr && utils::strmatch(name,"^f_")) { // fix
 
       fcid = lmp->modify->find_fix(&name[2]);
       if (fcid < 0) {
@@ -2936,11 +2943,11 @@ void lammps_gather_concat(void *handle, char *name, int type, int count, void *d
         return;
       }
 
-      if(count==1) vptr = (void *) lmp->modify->fix[fcid]->vector_atom;
+      if (count==1) vptr = (void *) lmp->modify->fix[fcid]->vector_atom;
       else vptr = (void *) lmp->modify->fix[fcid]->array_atom;
     }
 
-    if (vptr==nullptr && strstr(name,"c_") == name) { // compute
+    if (vptr==nullptr && utils::strmatch(name,"^c_")) { // compute
 
       fcid = lmp->modify->find_compute(&name[2]);
       if (fcid < 0) {
@@ -2965,13 +2972,13 @@ void lammps_gather_concat(void *handle, char *name, int type, int count, void *d
       if (lmp->modify->compute[fcid]->invoked_peratom != lmp->update->ntimestep)
         lmp->modify->compute[fcid]->compute_peratom();
 
-      if(count==1) vptr = (void *) lmp->modify->compute[fcid]->vector_atom;
+      if (count==1) vptr = (void *) lmp->modify->compute[fcid]->vector_atom;
       else vptr = (void *) lmp->modify->compute[fcid]->array_atom;
 
 
     }
 
-    if (vptr==nullptr && strstr(name,"d_") == name) { // property / atom
+    if (vptr==nullptr && utils::strmatch(name,"^[di]_")) { // property / atom
 
       fcid = lmp->atom->find_custom(&name[2], ltype);
       if (fcid < 0) {
@@ -2992,7 +2999,7 @@ void lammps_gather_concat(void *handle, char *name, int type, int count, void *d
                               "property/atom has count=1");
         return;
       }
-      if(ltype==0) vptr = (void *) lmp->atom->ivector[fcid];
+      if (ltype==0) vptr = (void *) lmp->atom->ivector[fcid];
       else vptr = (void *) lmp->atom->dvector[fcid];
 
     }
@@ -3148,7 +3155,7 @@ void lammps_gather_subset(void *handle, char *name,
 
     void *vptr = lmp->atom->extract(name);
 
-    if (vptr==nullptr && strstr(name,"f_") == name) { // fix
+    if (vptr==nullptr && utils::strmatch(name,"^f_")) { // fix
 
       fcid = lmp->modify->find_fix(&name[2]);
       if (fcid < 0) {
@@ -3177,11 +3184,11 @@ void lammps_gather_subset(void *handle, char *name,
         return;
       }
 
-      if(count==1) vptr = (void *) lmp->modify->fix[fcid]->vector_atom;
+      if (count==1) vptr = (void *) lmp->modify->fix[fcid]->vector_atom;
       else vptr = (void *) lmp->modify->fix[fcid]->array_atom;
     }
 
-    if (vptr==nullptr && strstr(name,"c_") == name) { // compute
+    if (vptr==nullptr && utils::strmatch(name,"^c_")) { // compute
 
       fcid = lmp->modify->find_compute(&name[2]);
       if (fcid < 0) {
@@ -3206,13 +3213,13 @@ void lammps_gather_subset(void *handle, char *name,
       if (lmp->modify->compute[fcid]->invoked_peratom != lmp->update->ntimestep)
         lmp->modify->compute[fcid]->compute_peratom();
 
-      if(count==1) vptr = (void *) lmp->modify->compute[fcid]->vector_atom;
+      if (count==1) vptr = (void *) lmp->modify->compute[fcid]->vector_atom;
       else vptr = (void *) lmp->modify->compute[fcid]->array_atom;
 
 
     }
 
-    if (vptr==nullptr && strstr(name,"d_") == name) { // property / atom
+    if (vptr==nullptr && utils::strmatch(name,"^[di]_")) { // property / atom
 
       fcid = lmp->atom->find_custom(&name[2], ltype);
       if (fcid < 0) {
@@ -3233,7 +3240,7 @@ void lammps_gather_subset(void *handle, char *name,
                               "property/atom has count=1");
         return;
       }
-      if(ltype==0) vptr = (void *) lmp->atom->ivector[fcid];
+      if (ltype==0) vptr = (void *) lmp->atom->ivector[fcid];
       else vptr = (void *) lmp->atom->dvector[fcid];
     }
 
@@ -3386,7 +3393,7 @@ void lammps_scatter(void *handle, char *name, int type, int count, void *data)
 
     void *vptr = lmp->atom->extract(name);
 
-    if (vptr==nullptr && strstr(name,"f_") == name) { // fix
+    if (vptr==nullptr && utils::strmatch(name,"^f_")) { // fix
 
       fcid = lmp->modify->find_fix(&name[2]);
       if (fcid < 0) {
@@ -3408,11 +3415,11 @@ void lammps_scatter(void *handle, char *name, int type, int count, void *data)
         return;
       }
 
-      if(count==1) vptr = (void *) lmp->modify->fix[fcid]->vector_atom;
+      if (count==1) vptr = (void *) lmp->modify->fix[fcid]->vector_atom;
       else vptr = (void *) lmp->modify->fix[fcid]->array_atom;
     }
 
-    if (vptr==nullptr && strstr(name,"c_") == name) { // compute
+    if (vptr==nullptr && utils::strmatch(name,"^c_")) { // compute
 
       fcid = lmp->modify->find_compute(&name[2]);
       if (fcid < 0) {
@@ -3437,13 +3444,13 @@ void lammps_scatter(void *handle, char *name, int type, int count, void *data)
       if (lmp->modify->compute[fcid]->invoked_peratom != lmp->update->ntimestep)
         lmp->modify->compute[fcid]->compute_peratom();
 
-      if(count==1) vptr = (void *) lmp->modify->compute[fcid]->vector_atom;
+      if (count==1) vptr = (void *) lmp->modify->compute[fcid]->vector_atom;
       else vptr = (void *) lmp->modify->compute[fcid]->array_atom;
 
 
     }
 
-    if (vptr==nullptr && strstr(name,"d_") == name) { // property / atom
+    if (vptr==nullptr && utils::strmatch(name,"^[di]_")) { // property / atom
 
       fcid = lmp->atom->find_custom(&name[2], ltype);
       if (fcid < 0) {
@@ -3461,12 +3468,12 @@ void lammps_scatter(void *handle, char *name, int type, int count, void *data)
           lmp->error->warning(FLERR,"lammps_scatter: property/atom has count=1");
         return;
       }
-      if(ltype==0) vptr = (void *) lmp->atom->ivector[fcid];
+      if (ltype==0) vptr = (void *) lmp->atom->ivector[fcid];
       else vptr = (void *) lmp->atom->dvector[fcid];
 
     }
 
-    if(vptr == nullptr) {
+    if (vptr == nullptr) {
       if (lmp->comm->me == 0)
         lmp->error->warning(FLERR,"lammps_scatter: unknown property name");
       return;
@@ -3584,7 +3591,7 @@ void lammps_scatter_subset(void *handle, char *name,int type, int count,
 
     void *vptr = lmp->atom->extract(name);
 
-    if (vptr==nullptr && strstr(name,"f_") == name) { // fix
+    if (vptr==nullptr && utils::strmatch(name,"^f_")) { // fix
 
       fcid = lmp->modify->find_fix(&name[2]);
       if (fcid < 0) {
@@ -3606,11 +3613,11 @@ void lammps_scatter_subset(void *handle, char *name,int type, int count,
         return;
       }
 
-      if(count==1) vptr = (void *) lmp->modify->fix[fcid]->vector_atom;
+      if (count==1) vptr = (void *) lmp->modify->fix[fcid]->vector_atom;
       else vptr = (void *) lmp->modify->fix[fcid]->array_atom;
     }
 
-    if (vptr==nullptr && strstr(name,"c_") == name) { // compute
+    if (vptr==nullptr && utils::strmatch(name,"^c_")) { // compute
 
       fcid = lmp->modify->find_compute(&name[2]);
       if (fcid < 0) {
@@ -3635,11 +3642,11 @@ void lammps_scatter_subset(void *handle, char *name,int type, int count,
       if (lmp->modify->compute[fcid]->invoked_peratom != lmp->update->ntimestep)
         lmp->modify->compute[fcid]->compute_peratom();
 
-      if(count==1) vptr = (void *) lmp->modify->compute[fcid]->vector_atom;
+      if (count==1) vptr = (void *) lmp->modify->compute[fcid]->vector_atom;
       else vptr = (void *) lmp->modify->compute[fcid]->array_atom;
     }
 
-    if (vptr==nullptr && strstr(name,"d_") == name) { // property / atom
+    if (vptr==nullptr && utils::strmatch(name,"^[di]_")) { // property / atom
 
       fcid = lmp->atom->find_custom(&name[2], ltype);
       if (fcid < 0) {
@@ -3660,11 +3667,11 @@ void lammps_scatter_subset(void *handle, char *name,int type, int count,
                               "property/atom has count=1");
         return;
       }
-      if(ltype==0) vptr = (void *) lmp->atom->ivector[fcid];
+      if (ltype==0) vptr = (void *) lmp->atom->ivector[fcid];
       else vptr = (void *) lmp->atom->dvector[fcid];
     }
 
-    if(vptr == nullptr) {
+    if (vptr == nullptr) {
       if (lmp->comm->me == 0)
         lmp->error->warning(FLERR,"lammps_scatter_atoms_subset: "
                                   "unknown property name");
@@ -4019,7 +4026,7 @@ int lammps_neighlist_num_elements(void *handle, int idx) {
   LAMMPS *  lmp = (LAMMPS *) handle;
   Neighbor * neighbor = lmp->neighbor;
 
-  if(idx < 0 || idx >= neighbor->nlist) {
+  if (idx < 0 || idx >= neighbor->nlist) {
     return -1;
   }
 
@@ -4047,13 +4054,13 @@ void lammps_neighlist_element_neighbors(void *handle, int idx, int element, int 
   *numneigh = 0;
   *neighbors = nullptr;
 
-  if(idx < 0 || idx >= neighbor->nlist) {
+  if (idx < 0 || idx >= neighbor->nlist) {
     return;
   }
 
   NeighList * list = neighbor->lists[idx];
 
-  if(element < 0 || element >= list->inum) {
+  if (element < 0 || element >= list->inum) {
     return;
   }
 
@@ -4121,16 +4128,18 @@ void lammps_get_os_info(char *buffer, int buf_size)
 /* ---------------------------------------------------------------------- */
 
 /** This function is used to query whether LAMMPS was compiled with
- *  a real MPI library or in serial.
+ *  a real MPI library or in serial. For the real MPI library it
+ *  reports the size of the MPI communicator in bytes (4 or 8),
+ *  which allows to check for compatibility with a hosting code.
  *
- * \return 0 when compiled with MPI STUBS, otherwise 1 */
+ * \return 0 when compiled with MPI STUBS, otherwise the MPI_Comm size in bytes */
 
 int lammps_config_has_mpi_support()
 {
 #ifdef MPI_STUBS
   return 0;
 #else
-  return 1;
+  return sizeof(MPI_Comm);
 #endif
 }
 
@@ -4263,7 +4272,7 @@ included in the LAMMPS library in use.
  */
 int lammps_config_package_count() {
   int i = 0;
-  while(LAMMPS::installed_packages[i] != nullptr) {
+  while (LAMMPS::installed_packages[i] != nullptr) {
     ++i;
   }
   return i;
@@ -4295,6 +4304,31 @@ int lammps_config_package_name(int idx, char *buffer, int buf_size) {
 
   strncpy(buffer, LAMMPS::installed_packages[idx], buf_size);
   return 1;
+}
+
+/** Check for compile time settings in accelerator packages included in LAMMPS.
+ *
+\verbatim embed:rst
+This function checks availability of compile time settings of included
+:doc:`accelerator packages <Speed_packages>` in LAMMPS.
+Supported packages names are "GPU", "KOKKOS", "USER-INTEL", and "USER-OMP".
+Supported categories are "api" with possible settings "cuda", "hip", "phi",
+"pthreads", "opencl", "openmp", and "serial", and "precision" with
+possible settings "double", "mixed", and "single".  If the combination
+of package, category, and setting is available, the function returns 1,
+otherwise 0.
+\endverbatim
+ *
+ * \param  package   string with the name of the accelerator package
+ * \param  category  string with the category name of the setting
+ * \param  setting   string with the name of the specific setting
+ * \return 1 if available, 0 if not.
+ */
+int lammps_config_accelerator(const char *package,
+                              const char *category,
+                              const char *setting)
+{
+  return Info::has_accelerator_feature(package,category,setting) ? 1 : 0;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -4639,7 +4673,7 @@ void lammps_set_fix_external_callback(void *handle, char *id, FixExternalFnPtr c
 
     Fix *fix = lmp->modify->fix[ifix];
 
-    if (strcmp("external",fix->style) != 0){
+    if (strcmp("external",fix->style) != 0) {
       char str[128];
       snprintf(str, 128, "Fix '%s' is not of style external!", id);
       lmp->error->all(FLERR,str);
@@ -4813,7 +4847,7 @@ int lammps_get_last_error_message(void *handle, char *buffer, int buf_size) {
   Error *error = lmp->error;
   buffer[0] = buffer[buf_size-1] = '\0';
 
-  if(!error->get_last_error().empty()) {
+  if (!error->get_last_error().empty()) {
     int error_type = error->get_last_error_type();
     strncpy(buffer, error->get_last_error().c_str(), buf_size-1);
     error->set_last_error("", ERROR_NONE);

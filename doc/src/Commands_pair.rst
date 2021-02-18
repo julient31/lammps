@@ -96,6 +96,7 @@ OPT.
    * :doc:`eam/cd <pair_eam>`
    * :doc:`eam/cd/old <pair_eam>`
    * :doc:`eam/fs (gikot) <pair_eam>`
+   * :doc:`eam/he <pair_eam>`
    * :doc:`edip (o) <pair_edip>`
    * :doc:`edip/multi <pair_edip>`
    * :doc:`edpd <pair_mesodpd>`
@@ -121,7 +122,7 @@ OPT.
    * :doc:`lebedeva/z <pair_lebedeva_z>`
    * :doc:`lennard/mdf <pair_mdf>`
    * :doc:`line/lj <pair_line_lj>`
-   * :doc:`lj/charmm/coul/charmm (iko) <pair_charmm>`
+   * :doc:`lj/charmm/coul/charmm (giko) <pair_charmm>`
    * :doc:`lj/charmm/coul/charmm/implicit (ko) <pair_charmm>`
    * :doc:`lj/charmm/coul/long (gikot) <pair_charmm>`
    * :doc:`lj/charmm/coul/long/soft (o) <pair_fep_soft>`
@@ -262,6 +263,7 @@ OPT.
    * :doc:`ufm (got) <pair_ufm>`
    * :doc:`vashishta (gko) <pair_vashishta>`
    * :doc:`vashishta/table (o) <pair_vashishta>`
+   * :doc:`wf/cut <pair_wf_cut>`
    * :doc:`yukawa (gko) <pair_yukawa>`
    * :doc:`yukawa/colloid (go) <pair_yukawa_colloid>`
    * :doc:`zbl (gko) <pair_zbl>`
