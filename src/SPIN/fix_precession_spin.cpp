@@ -255,12 +255,11 @@ void FixPrecessionSpin::init()
 
   // check that fix precession/spin is only declared once
 
-  int iprec = 0;
-  for (int iforce = 0; iforce < modify->nfix; iforce++)
-    if (strstr(modify->fix[iforce]->style,"precession/spin")) iprec++;
-  if (iprec > 1)
-    error->all(FLERR,"precession/spin command can only be declared once");
-
+  // int iprec = 0;
+  // for (int iforce = 0; iforce < modify->nfix; iforce++)
+  //   if (strstr(modify->fix[iforce]->style,"precession/spin")) iprec++;
+  // if (iprec > 1)
+  //   error->all(FLERR,"precession/spin command can only be declared once");
 
   varflag = CONSTANT;
   if (magfieldstyle != CONSTANT) varflag = EQUAL;
