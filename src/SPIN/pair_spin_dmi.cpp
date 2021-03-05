@@ -167,7 +167,7 @@ void PairSpinDmi::compute(int eflag, int vflag)
   double evdwl, ecoul;
   double xi[3], eij[3];
   double delx,dely,delz;
-  double spi[3], spj[3];
+  double spi[4], spj[4];
   double fi[3], fmi[3];
   double local_cut2;
   double rsq, inorm;
@@ -211,6 +211,7 @@ void PairSpinDmi::compute(int eflag, int vflag)
     spi[0] = sp[i][0];
     spi[1] = sp[i][1];
     spi[2] = sp[i][2];
+    spi[3] = sp[i][3]; //Tchirac: I added the norm of the spin here
     emag[i] = 0.0;
 
     // loop on neighbors
@@ -224,6 +225,7 @@ void PairSpinDmi::compute(int eflag, int vflag)
       spj[0] = sp[j][0];
       spj[1] = sp[j][1];
       spj[2] = sp[j][2];
+      spj[3] = sp[j][3]; //Tchirac: I added the norm of the spin here
 
       evdwl = 0.0;
       fi[0] = fi[1] = fi[2] = 0.0;
@@ -237,6 +239,8 @@ void PairSpinDmi::compute(int eflag, int vflag)
       eij[0] = -inorm*delx;
       eij[1] = -inorm*dely;
       eij[2] = -inorm*delz;
+
+      // printf("eij %g %g %g \n",eij[0],eij[1],eij[2]);
 
       local_cut2 = cut_spin_dmi[itype][jtype]*cut_spin_dmi[itype][jtype];
 
@@ -252,6 +256,9 @@ void PairSpinDmi::compute(int eflag, int vflag)
           evdwl -= (spi[0]*fmi[0] + spi[1]*fmi[1] + spi[2]*fmi[2]);
           evdwl *= 0.5*hbar;
           emag[i] += evdwl;
+          // printf("sp %g %g %g \n",spi[0],spi[1],spi[2]);
+          // printf("fm %g %g %g \n",fmi[0],fmi[1],fmi[2]);
+          // printf("en %g \n",evdwl);
         } else evdwl = 0.0;
 
         f[i][0] += fi[0];
@@ -364,21 +371,35 @@ void PairSpinDmi::compute_single_pair(int ii, double fmi[3])
    compute the dmi interaction between spin i and spin j
 ------------------------------------------------------------------------- */
 
-void PairSpinDmi::compute_dmi(int i, int j, double eij[3], double fmi[3], double spj[3])
+void PairSpinDmi::compute_dmi(int i, int j, double eij[3], double fmi[3], double spj[4])
 {
   int *type = atom->type;
   int itype, jtype;
   double dmix, dmiy, dmiz;
   itype = type[i];
   jtype = type[j];
+  
+  // printf("types %d %d \n",itype,jtype);
 
-  dmix = eij[1]*v_dmz[itype][jtype] - eij[2]*v_dmy[itype][jtype];
-  dmiy = eij[2]*v_dmx[itype][jtype] - eij[0]*v_dmz[itype][jtype];
-  dmiz = eij[0]*v_dmy[itype][jtype] - eij[1]*v_dmx[itype][jtype];
 
-  fmi[0] -= (dmiy*spj[2] - dmiz*spj[1]);
-  fmi[1] -= (dmiz*spj[0] - dmix*spj[2]);
-  fmi[2] -= (dmix*spj[1] - dmiy*spj[0]);
+  dmix = v_dmx[itype][jtype]; //Tchirac: I removed the scalar product. We enter directly Jperp. (eij is useless. Use magelec iuf you need it)
+  dmiy = v_dmy[itype][jtype];
+  dmiz = v_dmz[itype][jtype];
+  // printf("dmi %g %g %g \n",dmix,dmiy,dmiz);
+  // printf("sp %g \n",spj[3]);
+
+  fmi[0] -= (dmiy*spj[2] - dmiz*spj[1])*spj[3];//Tchirac: I added the norm of the spin here
+  fmi[1] -= (dmiz*spj[0] - dmix*spj[2])*spj[3];//Tchirac: I added the norm of the spin here
+  fmi[2] -= (dmix*spj[1] - dmiy*spj[0])*spj[3];//Tchirac: I added the norm of the spin here
+  // dmix = (eij[1]*v_dmz[itype][jtype] - eij[2]*v_dmy[itype][jtype]);
+  // dmiy = (eij[2]*v_dmx[itype][jtype] - eij[0]*v_dmz[itype][jtype]);
+  // dmiz = (eij[0]*v_dmy[itype][jtype] - eij[1]*v_dmx[itype][jtype]);
+  // 
+  // printf("dmi %g %g %g \n",dmix,dmiy,dmiz);
+
+  // fmi[0] -= (dmiy*spj[2] - dmiz*spj[1]);
+  // fmi[1] -= (dmiz*spj[0] - dmix*spj[2]);
+  // fmi[2] -= (dmix*spj[1] - dmiy*spj[0]);
 }
 
 /* ----------------------------------------------------------------------

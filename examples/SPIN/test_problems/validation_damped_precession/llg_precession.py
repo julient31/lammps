@@ -3,7 +3,6 @@
 import numpy as np , pylab, tkinter
 import math
 import matplotlib.pyplot as plt
-import mpmath as mp
 
 mub=5.78901e-5          # Bohr magneton (eV/T)
 hbar=0.658212           # Planck's constant (eV.fs/rad)

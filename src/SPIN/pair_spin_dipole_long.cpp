@@ -51,9 +51,7 @@ PairSpinDipoleLong::PairSpinDipoleLong(LAMMPS *lmp) : PairSpin(lmp)
   mub = 9.274e-4;                               // in A.Ang^2
   mu_0 = 784.15;                                // in eV/Ang/A^2
   mub2mu0 = mub * mub * mu_0 / (4.0*MY_PI);     // in eV.Ang^3
-  //mub2mu0 = mub * mub * mu_0 / (4.0*MY_PI);   // in eV
   mub2mu0hbinv = mub2mu0 / hbar;                // in rad.THz
-
 }
 
 /* ----------------------------------------------------------------------
@@ -131,7 +129,7 @@ void PairSpinDipoleLong::init_style()
 {
   PairSpin::init_style();
 
-  // insure use of KSpace long-range solver, set g_ewald
+  // ensure use of KSpace long-range solver, set g_ewald
 
   if (force->kspace == nullptr)
     error->all(FLERR,"Pair style requires a KSpace style");
@@ -182,28 +180,22 @@ void *PairSpinDipoleLong::extract(const char *str, int &dim)
 void PairSpinDipoleLong::compute(int eflag, int vflag)
 {
   int i,j,ii,jj,inum,jnum,itype,jtype;
-  double r,rinv,r2inv,rsq;
-  double grij,expm2,t,erfc;
-  double evdwl,ecoul;
-  double bij[4];
-  double xi[3],rij[3],eij[3];
-  double spi[4],spj[4];
-  double fi[3],fmi[3];
-  double local_cut2;
-  double pre1,pre2,pre3;
   int *ilist,*jlist,*numneigh,**firstneigh;
+  double r,rinv,r2inv,rsq,grij,expm2,t,erfc;
+  double evdwl,ecoul,local_cut2,pre1,pre2,pre3;
+  double bij[4],xi[3],rij[3],eij[3],spi[4],spj[4],fi[3],fmi[3];
 
   evdwl = ecoul = 0.0;
   if (eflag || vflag) ev_setup(eflag,vflag);
   else evflag = vflag_fdotr = 0;
 
+  int *type = atom->type;
+  int nlocal = atom->nlocal;
+  int newton_pair = force->newton_pair;
   double **x = atom->x;
   double **f = atom->f;
   double **fm = atom->fm;
   double **sp = atom->sp;
-  int *type = atom->type;
-  int nlocal = atom->nlocal;
-  int newton_pair = force->newton_pair;
 
   inum = list->inum;
   ilist = list->ilist;
@@ -270,15 +262,22 @@ void PairSpinDipoleLong::compute(int eflag, int vflag)
         r2inv = 1.0/rsq;
 
         r = sqrt(rsq);
+        printf("Before erfc, (r,g): %g %g \n",r,g_ewald);
         grij = g_ewald * r;
         expm2 = exp(-grij*grij);
         t = 1.0 / (1.0 + EWALD_P*grij);
         erfc = t * (A1+t*(A2+t*(A3+t*(A4+t*A5)))) * expm2;
 
+        printf("test erfc: %g \n",(1.0-erf(g_ewald * r))*rinv);
+
         bij[0] = erfc * rinv;
         bij[1] = (bij[0] + pre1*expm2) * r2inv;
         bij[2] = (3.0*bij[1] + pre2*expm2) * r2inv;
         bij[3] = (5.0*bij[2] + pre3*expm2) * r2inv;
+
+        printf("B0 = %g \n",bij[0]); 
+        printf("B1 = %g \n",bij[1]);
+        printf("B2 = %g \n",bij[2]);
 
         compute_long(i,j,eij,bij,fmi,spi,spj);
         if (lattice_flag)
@@ -288,6 +287,8 @@ void PairSpinDipoleLong::compute(int eflag, int vflag)
           if (rsq <= local_cut2) {
             evdwl -= (spi[0]*fmi[0] + spi[1]*fmi[1] + spi[2]*fmi[2]);
             evdwl *= 0.5*hbar;
+            // test
+            printf("test corr: %g \n", evdwl);
             emag[i] += evdwl;
           }
         } else evdwl = 0.0;
@@ -449,6 +450,8 @@ void PairSpinDipoleLong::compute_long(int /* i */, int /* j */, double eij[3],
   fmi[0] += pre * (b2 * sjeij * eij[0] - b1 * spj[0]);
   fmi[1] += pre * (b2 * sjeij * eij[1] - b1 * spj[1]);
   fmi[2] += pre * (b2 * sjeij * eij[2] - b1 * spj[2]);
+  
+  printf("test prec i, fm = %g %g %g \n",fmi[0],fmi[1],fmi[2]);
 }
 
 /* ----------------------------------------------------------------------

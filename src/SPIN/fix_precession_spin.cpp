@@ -433,6 +433,7 @@ void FixPrecessionSpin::compute_anisotropy(double spi[3], double fmi[3])
   fmi[0] += scalar*Kax;
   fmi[1] += scalar*Kay;
   fmi[2] += scalar*Kaz;
+  // printf("fm pres: %g %g %g \n",fmi[0],fmi[1],fmi[2]);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -520,7 +521,7 @@ void FixPrecessionSpin::compute_hexaniso(double spi[3], double fmi[3])
 
   phi = atan2(s_y,s_x);
   ssint2 = s_x*s_x + s_y*s_y;                 // s^2sin^2(theta)
-  pf = 6* K6h * ssint2*ssint2*sqrt(ssint2);   // 6*K_6*s^5*sin^5(theta)
+  pf = 6.0 * K6h * ssint2*ssint2*sqrt(ssint2);   // 6*K_6*s^5*sin^5(theta)
   double fm_x =  pf*cos(5*phi);
   double fm_y = -pf*sin(5*phi);
   double fm_z =  0;

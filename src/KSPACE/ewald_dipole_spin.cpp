@@ -323,9 +323,13 @@ void EwaldDipoleSpin::compute(int eflag, int vflag)
 
   // set energy/virial flags
 
+  printf("Test ewald flags: %d %d \n",eflag,vflag);
+
   if (eflag || vflag) ev_setup(eflag,vflag);
   else evflag = evflag_atom = eflag_global = vflag_global =
          eflag_atom = vflag_atom = 0;
+  
+  printf("Test ewald flags2: %d \n",evflag_atom);
 
   // if atom count has changed, update qsum and qsqsum
 
@@ -482,8 +486,11 @@ void EwaldDipoleSpin::compute(int eflag, int vflag)
 
   // per-atom energy/virial
   // energy includes self-energy correction
+        
+  printf("### Test in Ewald \n");
 
   if (evflag_atom) {
+    printf("### Test2 in Ewald \n");
     if (eflag_atom) {
       for (i = 0; i < nlocal; i++) {
         spx = sp[i][0]*sp[i][3];
@@ -491,6 +498,7 @@ void EwaldDipoleSpin::compute(int eflag, int vflag)
         spz = sp[i][2]*sp[i][3];
         eatom[i] -= (spx*spx + spy*spy + spz*spz)
           *2.0*g3/3.0/MY_PIS;
+        printf("Ewd energy: %g \n",eatom[i]);
         eatom[i] *= spscale;
       }
     }
